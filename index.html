@@ -544,8 +544,8 @@ html.beige .mode-btn:not(.active):hover { color: rgba(120, 100, 80, 0.65); }
       <div class="inline-limit" id="inline-limit"></div>
       <div class="mode-toggle">
         <div class="mode-slider" id="mode-slider"></div>
-        <button class="mode-btn active" id="btn-solo" onclick="setMode('solo')">Solo</button>
-        <button class="mode-btn" id="btn-partner" onclick="setMode('partner')">w/ Partner</button>
+        <button class="mode-btn active" id="btn-solo" ontouchstart="haptic()" onclick="setMode('solo')">Solo</button>
+        <button class="mode-btn" id="btn-partner" ontouchstart="haptic()" onclick="setMode('partner')">w/ Partner</button>
       </div>
     </div>
   </div>
@@ -684,8 +684,12 @@ html.beige .mode-btn:not(.active):hover { color: rgba(120, 100, 80, 0.65); }
 
 <script>
 // ── Haptic ──
+let _lastHaptic = 0;
 function haptic() {
-  if (navigator.vibrate) navigator.vibrate(8);
+  const now = Date.now();
+  if (now - _lastHaptic < 50) return; // 50ms以内の連続呼び出しを無視
+  _lastHaptic = now;
+  if (navigator.vibrate) navigator.vibrate(4);
 }
 
 // ── Touch device detection ──
@@ -708,7 +712,7 @@ function setMode(m) {
   document.getElementById('btn-solo').classList.toggle('active', m === 'solo');
   document.getElementById('btn-partner').classList.toggle('active', m === 'partner');
   document.getElementById('mode-slider').classList.toggle('right', m === 'partner');
-  haptic();
+  if (!isTouch) haptic();
   const slM = document.getElementById('sl-monthly');
   const maxM = m === 'solo' ? MONTHLY_MAX_SOLO : MONTHLY_MAX_PARTNER;
   slM.max = maxM;
