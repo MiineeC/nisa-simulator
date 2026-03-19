@@ -589,7 +589,7 @@ html.beige .inline-limit { color: #a02020; }
             <span class="sl-name"><span class="lbl-desktop">初期元本</span><span class="lbl-mobile">初期元本（投資済み金額）</span></span>
             <span class="sl-val c-green" id="lbl-principal">¥100万</span>
           </div>
-          <input type="range" id="sl-principal" min="0" max="20000000" step="100000" value="1000000" onpointerdown="haptic()" ontouchend="haptic()" oninput="onSlider(true)">
+          <input type="range" id="sl-principal" min="0" max="18000000" step="200000" value="1000000" onpointerdown="haptic()" ontouchend="haptic()" oninput="onSlider(true)">
         </div>
 
         <div class="sl-group">
@@ -719,6 +719,10 @@ const NISA_SOLO    = 18_000_000;
 const NISA_PARTNER = 36_000_000;
 const MONTHLY_MAX_SOLO    = 150_000;
 const MONTHLY_MAX_PARTNER = 300_000;
+const PRINCIPAL_MAX_SOLO     = 18_000_000;
+const PRINCIPAL_MAX_PARTNER  = 36_000_000;
+const PRINCIPAL_STEP_SOLO    = 200_000;
+const PRINCIPAL_STEP_PARTNER = 250_000;
 const NISA_M_SOLO    = 150_000;
 const NISA_M_PARTNER = 600_000;
 
@@ -736,6 +740,15 @@ function setMode(m) {
   const maxM = m === 'solo' ? MONTHLY_MAX_SOLO : MONTHLY_MAX_PARTNER;
   slM.max = maxM;
   if (+slM.value > maxM) slM.value = maxM;
+
+  const slP    = document.getElementById('sl-principal');
+  const maxP   = m === 'solo' ? PRINCIPAL_MAX_SOLO  : PRINCIPAL_MAX_PARTNER;
+  const stepP  = m === 'solo' ? PRINCIPAL_STEP_SOLO : PRINCIPAL_STEP_PARTNER;
+  slP.max  = maxP;
+  slP.step = stepP;
+  // stepが変わるので現在値を新しいstepの倍数に丸める
+  const rounded = Math.round(+slP.value / stepP) * stepP;
+  slP.value = Math.min(maxP, Math.max(0, rounded));
   onSlider();
 }
 
