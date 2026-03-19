@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>NISA Compound Growth Simulator</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -689,8 +689,12 @@ function haptic() {
   const now = Date.now();
   if (now - _lastHaptic < 50) return; // 50ms以内の連続呼び出しを無視
   _lastHaptic = now;
-  if (navigator.vibrate) navigator.vibrate(4);
+  if (navigator.vibrate) navigator.vibrate(2);
 }
+// 最初のタッチで vibrate API をアンロック（Android の制限対策）
+document.addEventListener('touchstart', function() {
+  if (navigator.vibrate) navigator.vibrate(0);
+}, { once: true });
 
 // ── Touch device detection ──
 const isTouch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
