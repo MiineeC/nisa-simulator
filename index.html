@@ -364,6 +364,14 @@ input[type=range]:active::-webkit-slider-thumb {
   display: none;
 }
 
+/* ── ラベル出し分け（デスクトップ/モバイル） ── */
+.lbl-desktop { display: none; }
+.lbl-mobile  { display: inline; }
+@media (min-width: 1024px) {
+  .lbl-desktop { display: inline; }
+  .lbl-mobile  { display: none; }
+}
+
 /* ════════════════════════════════════════════
    DESKTOP — everything in one viewport
 ════════════════════════════════════════════ */
@@ -504,6 +512,12 @@ html.beige .page-header h1 {
 html.beige .mode-btn { color: rgba(120, 100, 80, 0.35); }
 html.beige .mode-btn.active { color: #fff; }
 html.beige .mode-btn:not(.active):hover { color: rgba(120, 100, 80, 0.65); }
+html.beige .limit-note {
+  background: rgba(180, 50, 40, .12);
+  border-color: rgba(180, 50, 40, .35);
+  color: #a02020;
+}
+html.beige .inline-limit { color: #a02020; }
 
 /* ── Theme toggle button (fixed, bottom-right) ── */
 #theme-btn {
@@ -559,7 +573,7 @@ html.beige .mode-btn:not(.active):hover { color: rgba(120, 100, 80, 0.65); }
         <div class="vals-grid-wrap">
           <div class="card-title">Current Settings</div>
           <div class="vals-grid">
-            <div class="val-cell"><div class="val-label">初期元本（現時点投資済み額）</div>    <div class="val-num c-green"  id="disp-principal">¥100万</div></div>
+            <div class="val-cell"><div class="val-label">初期元本</div>    <div class="val-num c-green"  id="disp-principal">¥100万</div></div>
             <div class="val-cell"><div class="val-label">毎月積立</div>    <div class="val-num c-blue"   id="disp-monthly">¥5万</div></div>
             <div class="val-cell"><div class="val-label">年利率</div>      <div class="val-num c-yellow" id="disp-rate">5.0%</div></div>
             <div class="val-cell"><div class="val-label">信託報酬</div>    <div class="val-num c-red"    id="disp-fee">0.2%</div></div>
@@ -572,7 +586,7 @@ html.beige .mode-btn:not(.active):hover { color: rgba(120, 100, 80, 0.65); }
 
         <div class="sl-group">
           <div class="sl-row">
-            <span class="sl-name">初期元本（現時点投資済み額）</span>
+            <span class="sl-name"><span class="lbl-desktop">初期元本</span><span class="lbl-mobile">初期元本（投資済み金額）</span></span>
             <span class="sl-val c-green" id="lbl-principal">¥100万</span>
           </div>
           <input type="range" id="sl-principal" min="0" max="20000000" step="100000" value="1000000" onpointerdown="haptic()" ontouchend="haptic()" oninput="onSlider(true)">
