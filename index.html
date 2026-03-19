@@ -559,7 +559,7 @@ html.beige .mode-btn:not(.active):hover { color: rgba(120, 100, 80, 0.65); }
         <div class="vals-grid-wrap">
           <div class="card-title">Current Settings</div>
           <div class="vals-grid">
-            <div class="val-cell"><div class="val-label">初期元本</div>    <div class="val-num c-green"  id="disp-principal">¥100万</div></div>
+            <div class="val-cell"><div class="val-label">初期元本（現時点投資済み額）</div>    <div class="val-num c-green"  id="disp-principal">¥100万</div></div>
             <div class="val-cell"><div class="val-label">毎月積立</div>    <div class="val-num c-blue"   id="disp-monthly">¥5万</div></div>
             <div class="val-cell"><div class="val-label">年利率</div>      <div class="val-num c-yellow" id="disp-rate">5.0%</div></div>
             <div class="val-cell"><div class="val-label">信託報酬</div>    <div class="val-num c-red"    id="disp-fee">0.2%</div></div>
@@ -572,7 +572,7 @@ html.beige .mode-btn:not(.active):hover { color: rgba(120, 100, 80, 0.65); }
 
         <div class="sl-group">
           <div class="sl-row">
-            <span class="sl-name">初期元本</span>
+            <span class="sl-name">初期元本（現時点投資済み額）</span>
             <span class="sl-val c-green" id="lbl-principal">¥100万</span>
           </div>
           <input type="range" id="sl-principal" min="0" max="10000000" step="100000" value="1000000" onpointerdown="haptic()" oninput="onSlider(true)">
@@ -691,6 +691,10 @@ function haptic() {
   _lastHaptic = now;
   if (navigator.vibrate) navigator.vibrate(1);
 }
+// 最初の pointerdown でアンロック（pointerdown はユーザーアクティベーションを生成する）
+document.addEventListener('pointerdown', function() {
+  if (navigator.vibrate) navigator.vibrate(0);
+}, { once: true });
 // ── Touch device detection ──
 const isTouch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
 
@@ -723,7 +727,7 @@ function setMode(m) {
 function fmt(v) {
   const a = Math.abs(v);
   if (a >= 1e8) return '¥' + (v / 1e8).toFixed(2) + '億';
-  if (a >= 1e4) return '¥' + (v / 1e4).toFixed(0) + '万';
+  if (a >= 1e4) { const m = v / 1e4; return '¥' + (m % 1 === 0 ? m.toFixed(0) : m.toFixed(1)) + '万'; }
   return '¥' + v.toLocaleString();
 }
 function fmtAx(v) {
