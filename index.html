@@ -612,7 +612,7 @@ html.beige .inline-limit { color: #a02020; }
             <span class="sl-name">年利率（期待リターン）</span>
             <span class="sl-val c-yellow" id="lbl-rate">5.0%</span>
           </div>
-          <input type="range" id="sl-rate" min="0" max="50" step="0.5" value="5" onpointerdown="haptic()" ontouchend="haptic()" oninput="onSlider(true)">
+          <input type="range" id="sl-rate" min="0" max="35" step="0.5" value="5" onpointerdown="haptic()" ontouchend="haptic()" oninput="onSlider(true)">
         </div>
 
         <div class="sl-group">
@@ -1011,6 +1011,19 @@ function renderMetrics(data, principal, nisaCap) {
     il.style.display = 'none';
   }
 }
+
+// ── 年利率スライダーのmax: デスクトップ40% / モバイル35% ──
+function updateRateMax() {
+  const sl   = document.getElementById('sl-rate');
+  const maxR = window.innerWidth >= 1024 ? 40 : 35;
+  sl.max = maxR;
+  if (+sl.value > maxR) {
+    sl.value = maxR;
+    onSlider();
+  }
+}
+window.addEventListener('resize', updateRateMax);
+updateRateMax();
 
 onSlider();
 </script>
