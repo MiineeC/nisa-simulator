@@ -575,7 +575,7 @@ html.beige .mode-btn:not(.active):hover { color: rgba(120, 100, 80, 0.65); }
             <span class="sl-name">初期元本（現時点投資済み額）</span>
             <span class="sl-val c-green" id="lbl-principal">¥100万</span>
           </div>
-          <input type="range" id="sl-principal" min="0" max="10000000" step="100000" value="1000000" onpointerdown="haptic()" oninput="onSlider(true)">
+          <input type="range" id="sl-principal" min="0" max="20000000" step="100000" value="1000000" onpointerdown="haptic()" ontouchend="haptic()" oninput="onSlider(true)">
         </div>
 
         <div class="sl-group">
@@ -583,7 +583,7 @@ html.beige .mode-btn:not(.active):hover { color: rgba(120, 100, 80, 0.65); }
             <span class="sl-name">毎月積立額</span>
             <span class="sl-val c-blue" id="lbl-monthly">¥5万</span>
           </div>
-          <input type="range" id="sl-monthly" min="0" max="150000" step="5000" value="50000" onpointerdown="haptic()" oninput="onSlider(true)">
+          <input type="range" id="sl-monthly" min="0" max="150000" step="5000" value="50000" onpointerdown="haptic()" ontouchend="haptic()" oninput="onSlider(true)">
           <div class="nisa-bar-wrap">
             <div class="nisa-bar-top">
               <span>NISA 年間非課税枠 利用率</span>
@@ -598,7 +598,7 @@ html.beige .mode-btn:not(.active):hover { color: rgba(120, 100, 80, 0.65); }
             <span class="sl-name">年利率（期待リターン）</span>
             <span class="sl-val c-yellow" id="lbl-rate">5.0%</span>
           </div>
-          <input type="range" id="sl-rate" min="0" max="50" step="0.5" value="5" onpointerdown="haptic()" oninput="onSlider(true)">
+          <input type="range" id="sl-rate" min="0" max="50" step="0.5" value="5" onpointerdown="haptic()" ontouchend="haptic()" oninput="onSlider(true)">
         </div>
 
         <div class="sl-group">
@@ -606,7 +606,7 @@ html.beige .mode-btn:not(.active):hover { color: rgba(120, 100, 80, 0.65); }
             <span class="sl-name">信託報酬（年）</span>
             <span class="sl-val c-red" id="lbl-fee">0.2%</span>
           </div>
-          <input type="range" id="sl-fee" min="0" max="8" step="0.1" value="0.2" onpointerdown="haptic()" oninput="onSlider(true)">
+          <input type="range" id="sl-fee" min="0" max="8" step="0.1" value="0.2" onpointerdown="haptic()" ontouchend="haptic()" oninput="onSlider(true)">
         </div>
 
         <div class="sl-group" style="margin-bottom:0">
@@ -614,7 +614,7 @@ html.beige .mode-btn:not(.active):hover { color: rgba(120, 100, 80, 0.65); }
             <span class="sl-name">運用年数</span>
             <span class="sl-val c-text" id="lbl-years">20年</span>
           </div>
-          <input type="range" id="sl-years" min="1" max="90" step="1" value="20" onpointerdown="haptic()" oninput="onSlider(true)">
+          <input type="range" id="sl-years" min="1" max="90" step="1" value="20" onpointerdown="haptic()" ontouchend="haptic()" oninput="onSlider(true)">
         </div>
       </div>
     </div>
@@ -634,21 +634,21 @@ html.beige .mode-btn:not(.active):hover { color: rgba(120, 100, 80, 0.65); }
   <div class="results-bar">
 
     <div class="metrics-row">
-      <div class="metric-card metric-card--primary">
-        <div class="m-label">最終残高（手数料後）</div>
-        <div class="m-value c-green" id="m-final">—</div>
+      <div class="metric-card">
+        <div class="m-label">元本＋積立合計</div>
+        <div class="m-value c-blue" id="m-total-invested">—</div>
       </div>
       <div class="metric-card">
         <div class="m-label">手数料なし最終残高</div>
         <div class="m-value c-yellow" id="m-nofee">—</div>
       </div>
       <div class="metric-card">
-        <div class="m-label">元本＋積立合計</div>
-        <div class="m-value c-blue" id="m-total-invested">—</div>
-      </div>
-      <div class="metric-card">
         <div class="m-label">手数料による損失額</div>
         <div class="m-value c-red" id="m-fee-loss">—</div>
+      </div>
+      <div class="metric-card metric-card--primary">
+        <div class="m-label">最終残高</div>
+        <div class="m-value c-green" id="m-final">—</div>
       </div>
     </div>
 
@@ -691,10 +691,12 @@ function haptic() {
   _lastHaptic = now;
   if (navigator.vibrate) navigator.vibrate(1);
 }
-// 最初の pointerdown でアンロック（pointerdown はユーザーアクティベーションを生成する）
-document.addEventListener('pointerdown', function() {
+// touchend はユーザーアクティベーションを確実に生成する → 最初の指離し時にアンロック
+function _unlockVibrate() {
   if (navigator.vibrate) navigator.vibrate(0);
-}, { once: true });
+}
+document.addEventListener('touchend',  _unlockVibrate, { once: true, passive: true });
+document.addEventListener('pointerup', _unlockVibrate, { once: true, passive: true });
 // ── Touch device detection ──
 const isTouch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
 
