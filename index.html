@@ -773,7 +773,7 @@ function onSlider(triggerHaptic = false) {
   const rate      = +document.getElementById('sl-rate').value;
   const fee       = +document.getElementById('sl-fee').value;
   const years     = +document.getElementById('sl-years').value;
-  const netRate   = Math.max(0, rate - fee);
+  const netRate   = rate - fee;
   const nisaCap   = mode === 'solo' ? NISA_SOLO : NISA_PARTNER;
   const nisaMMax  = mode === 'solo' ? NISA_M_SOLO : NISA_M_PARTNER;
 
@@ -781,7 +781,11 @@ function onSlider(triggerHaptic = false) {
   set('disp-monthly',   fmt(monthly));
   set('disp-rate',      rate.toFixed(1) + '%');
   set('disp-fee',       fee.toFixed(1) + '%');
-  set('disp-net',       netRate.toFixed(1) + '%');
+  const netEl = document.getElementById('disp-net');
+  if (netEl) {
+    netEl.textContent = netRate.toFixed(1) + '%';
+    netEl.className   = 'val-num ' + (netRate < 0 ? 'c-red' : 'c-green');
+  }
   set('disp-years',     years + '年');
 
   set('lbl-principal', fmt(principal));
@@ -838,7 +842,7 @@ function updateChartTheme(isBeige) {
 
 // ── Simulate ──
 function simulate(principal, monthly, annualRate, fee, years, nisaCap) {
-  const netR   = Math.max(0, annualRate - fee) / 100 / 12;
+  const netR   = (annualRate - fee) / 100 / 12;
   const grossR = annualRate / 100 / 12;
   const months = years * 12;
 
@@ -852,8 +856,8 @@ function simulate(principal, monthly, annualRate, fee, years, nisaCap) {
       totalIn += c;
     }
     if (totalIn >= nisaCap && limitYear === null) limitYear = Math.ceil(m / 12);
-    balNet   = balNet   * (1 + netR)   + c;
-    balGross = balGross * (1 + grossR) + c;
+    balNet   = Math.max(0, balNet   * (1 + netR))   + c;
+    balGross = Math.max(0, balGross * (1 + grossR)) + c;
     if (m % 12 === 0) {
       net.push(balNet);
       gross.push(balGross);
