@@ -17,6 +17,7 @@
   --border:   #30363d;
   --text:     #e6edf3;
   --sub:      #8b949e;
+  --charcoal: #a89d95;
   --green:    #3fb950;
   --blue:     #58a6ff;
   --yellow:   #e3b341;
@@ -205,7 +206,7 @@ html, body {
 .c-yellow { color: var(--yellow); }
 .c-red    { color: var(--red);    }
 .c-orange { color: var(--orange); }
-.c-text   { color: var(--text);   }
+.c-text   { color: var(--charcoal); }
 
 /* ── Sliders ── */
 .sl-group { margin-bottom: 18px; }
@@ -497,12 +498,13 @@ input[type=range]:active::-webkit-slider-thumb {
    └─ 元に戻す: 同ボタンで即時ダークに戻せます
 ════════════════════════════════════════════ */
 html.beige {
-  --bg:     #f5efe6;
-  --surf:   #fdfaf6;
-  --surf2:  #ede5d8;
-  --border: #d9cfc2;
-  --text:   #1c1917;
-  --sub:    #7c6f62;
+  --bg:       #f5efe6;
+  --surf:     #fdfaf6;
+  --surf2:    #ede5d8;
+  --border:   #d9cfc2;
+  --text:     #1c1917;
+  --sub:      #7c6f62;
+  --charcoal: #7a6d62;
 }
 html.beige .page-header h1 {
   background: linear-gradient(135deg, #1c1917 0%, #4285f4 55%, #1aa260 100%);
@@ -520,6 +522,68 @@ html.beige .limit-note {
 }
 html.beige .inline-limit { color: #a02020; }
 
+/* ── Parameter tab toggle ── */
+.card-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.card-title-row .card-title { margin-bottom: 0; }
+.param-tabs {
+  display: flex;
+  background: var(--surf2);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  padding: 3px;
+}
+.ptab {
+  border: none;
+  background: transparent;
+  border-radius: 100px;
+  padding: 4px 11px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--sub);
+  cursor: pointer;
+  transition: background 0.22s, color 0.22s;
+  font-family: 'Roboto', sans-serif;
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+}
+.ptab.active {
+  background: linear-gradient(135deg, var(--gteal), var(--gblue));
+  color: #fff;
+}
+/* ── Withdrawal monthly display box ── */
+.w-monthly-box {
+  margin-top: 16px;
+  padding: 11px 14px;
+  background: var(--surf2);
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+.w-monthly-lbl { font-size: 0.8rem; color: var(--sub); line-height: 1.35; }
+.w-monthly-val {
+  font-size: 1.2rem;
+  font-weight: 700;
+  font-family: 'Google Sans', monospace;
+  color: var(--orange);
+  white-space: nowrap;
+}
+/* ── Withdrawal results in breakdown ── */
+.bd-section-title {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--orange);
+  margin: 8px 0 4px;
+}
 /* ── Theme toggle button (fixed, bottom-right) ── */
 #theme-btn {
   position: fixed;
@@ -583,54 +647,114 @@ html.beige .inline-limit { color: #a02020; }
           </div>
         </div><!-- /vals-grid-wrap -->
 
-        <div class="card-title">Parameters</div>
-
-        <div class="sl-group">
-          <div class="sl-row">
-            <span class="sl-name"><span class="lbl-desktop">初期元本</span><span class="lbl-mobile">初期元本（投資済み金額）</span></span>
-            <span class="sl-val c-green" id="lbl-principal">¥100万</span>
+        <!-- Parameters title + tab toggle -->
+        <div class="card-title-row">
+          <div class="card-title">Parameters</div>
+          <div class="param-tabs">
+            <button class="ptab active" id="ptab-accum" onclick="setParamMode('accum')">積立設定</button>
+            <button class="ptab"        id="ptab-withd" onclick="setParamMode('withd')">取り崩し</button>
           </div>
-          <input type="range" id="sl-principal" min="0" max="18000000" step="200000" value="1000000" oninput="onSlider(true)">
         </div>
 
-        <div class="sl-group">
-          <div class="sl-row">
-            <span class="sl-name">毎月積立額</span>
-            <span class="sl-val c-blue" id="lbl-monthly">¥5万</span>
-          </div>
-          <input type="range" id="sl-monthly" min="0" max="150000" step="5000" value="50000" oninput="onSlider(true)">
-          <div class="nisa-bar-wrap">
-            <div class="nisa-bar-top">
-              <span>NISA 年間非課税枠 利用率</span>
-              <span class="nisa-pct" id="nisa-pct">33%</span>
+        <!-- ── 積立設定パネル ── -->
+        <div id="panel-accum">
+          <div class="sl-group">
+            <div class="sl-row">
+              <span class="sl-name">現在の年齢</span>
+              <span class="sl-val c-text" id="lbl-age">30歳</span>
             </div>
-            <div class="nisa-bg"><div class="nisa-fill" id="nisa-bar" style="width:33%"></div></div>
+            <input type="range" id="sl-age" min="10" max="90" step="1" value="30" oninput="onSlider(true)">
           </div>
-        </div>
 
-        <div class="sl-group">
-          <div class="sl-row">
-            <span class="sl-name">年利率（期待リターン）</span>
-            <span class="sl-val c-yellow" id="lbl-rate">5.0%</span>
+          <div class="sl-group">
+            <div class="sl-row">
+              <span class="sl-name"><span class="lbl-desktop">初期元本</span><span class="lbl-mobile">初期元本（投資済み金額）</span></span>
+              <span class="sl-val c-green" id="lbl-principal">¥100万</span>
+            </div>
+            <input type="range" id="sl-principal" min="0" max="18000000" step="200000" value="1000000" oninput="onSlider(true)">
           </div>
-          <input type="range" id="sl-rate" min="0" max="35" step="0.5" value="5" oninput="onSlider(true)">
-        </div>
 
-        <div class="sl-group">
-          <div class="sl-row">
-            <span class="sl-name">信託報酬（年）</span>
-            <span class="sl-val c-red" id="lbl-fee">0.2%</span>
+          <div class="sl-group">
+            <div class="sl-row">
+              <span class="sl-name">毎月積立額</span>
+              <span class="sl-val c-blue" id="lbl-monthly">¥5万</span>
+            </div>
+            <input type="range" id="sl-monthly" min="0" max="150000" step="5000" value="50000" oninput="onSlider(true)">
+            <div class="nisa-bar-wrap">
+              <div class="nisa-bar-top">
+                <span>NISA 年間非課税枠 利用率</span>
+                <span class="nisa-pct" id="nisa-pct">33%</span>
+              </div>
+              <div class="nisa-bg"><div class="nisa-fill" id="nisa-bar" style="width:33%"></div></div>
+            </div>
           </div>
-          <input type="range" id="sl-fee" min="0" max="8" step="0.1" value="0.2" oninput="onSlider(true)">
-        </div>
 
-        <div class="sl-group" style="margin-bottom:0">
-          <div class="sl-row">
-            <span class="sl-name">運用年数</span>
-            <span class="sl-val c-text" id="lbl-years">20年</span>
+          <div class="sl-group">
+            <div class="sl-row">
+              <span class="sl-name">年利率（期待リターン）</span>
+              <span class="sl-val c-yellow" id="lbl-rate">5.0%</span>
+            </div>
+            <input type="range" id="sl-rate" min="0" max="35" step="0.5" value="5" oninput="onSlider(true)">
           </div>
-          <input type="range" id="sl-years" min="1" max="90" step="1" value="20" oninput="onSlider(true)">
-        </div>
+
+          <div class="sl-group">
+            <div class="sl-row">
+              <span class="sl-name">信託報酬（年）</span>
+              <span class="sl-val c-red" id="lbl-fee">0.2%</span>
+            </div>
+            <input type="range" id="sl-fee" min="0" max="8" step="0.1" value="0.2" oninput="onSlider(true)">
+          </div>
+
+          <div class="sl-group" style="margin-bottom:0">
+            <div class="sl-row">
+              <span class="sl-name">運用年数</span>
+              <span class="sl-val c-text" id="lbl-years">20年</span>
+            </div>
+            <input type="range" id="sl-years" min="1" max="90" step="1" value="20" oninput="onSlider(true)">
+          </div>
+        </div><!-- /panel-accum -->
+
+        <!-- ── 取り崩しパネル ── -->
+        <div id="panel-withd" style="display:none">
+          <div class="sl-group">
+            <div class="sl-row">
+              <span class="sl-name">取り崩し開始</span>
+              <span class="sl-val c-orange" id="lbl-w-start">65歳</span>
+            </div>
+            <input type="range" id="sl-w-start" min="10" max="120" step="1" value="65" oninput="onSlider(true)">
+          </div>
+
+          <div class="sl-group">
+            <div class="sl-row">
+              <span class="sl-name">年利率（取り崩し期・期待リターン）</span>
+              <span class="sl-val c-yellow" id="lbl-w-return">3.0%</span>
+            </div>
+            <input type="range" id="sl-w-return" min="0" max="15" step="0.5" value="3" oninput="onSlider(true)">
+          </div>
+
+          <div class="sl-group">
+            <div class="sl-row">
+              <span class="sl-name">年間取り崩し率</span>
+              <span class="sl-val c-orange" id="lbl-w-rate">4.0%</span>
+            </div>
+            <input type="range" id="sl-w-rate" min="0.5" max="10" step="0.1" value="4" oninput="onSlider(true)">
+          </div>
+
+          <div class="sl-group" style="margin-bottom:0">
+            <div class="sl-row">
+              <span class="sl-name">取り崩し期間</span>
+              <span class="sl-val c-text" id="lbl-w-years">30年</span>
+            </div>
+            <input type="range" id="sl-w-years" min="5" max="50" step="1" value="30" oninput="onSlider(true)">
+          </div>
+
+          <!-- 計算された月々取り崩し額 -->
+          <div class="w-monthly-box">
+            <span class="w-monthly-lbl">月々の取り崩し額<br>（開始時点の残高 × 年率 ÷ 12）</span>
+            <span class="w-monthly-val" id="w-monthly-amt">—</span>
+          </div>
+        </div><!-- /panel-withd -->
+
       </div>
     </div>
 
@@ -685,6 +809,22 @@ html.beige .inline-limit { color: #a02020; }
         <span class="bd-lbl">手数料損失</span>
         <span class="bd-val c-red" id="bd-fee">—</span>
       </div>
+      <!-- 取り崩し結果（取り崩しモード時のみ表示） -->
+      <div id="bd-withd-section" style="display:none">
+        <div class="bd-section-title">取り崩しフェーズ</div>
+        <div class="bd-row">
+          <span class="bd-lbl">月々取り崩し額（初月）</span>
+          <span class="bd-val c-orange" id="bd-w-monthly">—</span>
+        </div>
+        <div class="bd-row">
+          <span class="bd-lbl">取り崩し総額</span>
+          <span class="bd-val c-orange" id="bd-w-total">—</span>
+        </div>
+        <div class="bd-row" style="border-bottom:none">
+          <span class="bd-lbl">資産寿命</span>
+          <span class="bd-val" id="bd-w-life">—</span>
+        </div>
+      </div>
       <div class="limit-note" id="limit-note"></div>
     </div>
 
@@ -727,8 +867,21 @@ const PRINCIPAL_STEP_PARTNER = 250_000;
 const NISA_M_SOLO    = 150_000;
 const NISA_M_PARTNER = 600_000;
 
-let mode  = 'solo';
-let chart = null;
+let mode       = 'solo';
+let paramMode  = 'accum';   // 'accum' | 'withd'
+let chart      = null;
+let _chartStartAge  = 30;
+let _chartStartYear = new Date().getFullYear();
+
+// ── パラメータタブ切替 ──
+function setParamMode(m) {
+  paramMode = m;
+  document.getElementById('ptab-accum').classList.toggle('active', m === 'accum');
+  document.getElementById('ptab-withd').classList.toggle('active', m === 'withd');
+  document.getElementById('panel-accum').style.display = m === 'accum' ? '' : 'none';
+  document.getElementById('panel-withd').style.display = m === 'withd' ? '' : 'none';
+  onSlider();
+}
 
 // ── Mode ──
 function setMode(m) {
@@ -769,6 +922,7 @@ function fmtAx(v) {
 // ── Slider update ──
 function onSlider(triggerHaptic = false) {
   if (triggerHaptic) haptic();
+  const age       = +document.getElementById('sl-age').value;
   const principal = +document.getElementById('sl-principal').value;
   const monthly   = +document.getElementById('sl-monthly').value;
   const rate      = +document.getElementById('sl-rate').value;
@@ -788,7 +942,7 @@ function onSlider(triggerHaptic = false) {
     netEl.className   = 'val-num ' + (netRate < 0 ? 'c-red' : 'c-green');
   }
   set('disp-years',     years + '年');
-
+  set('lbl-age',        age + '歳');
   set('lbl-principal', fmt(principal));
   set('lbl-monthly',   fmt(monthly));
   set('lbl-rate',      rate.toFixed(1) + '%');
@@ -799,10 +953,29 @@ function onSlider(triggerHaptic = false) {
   document.getElementById('nisa-bar').style.width = pct.toFixed(0) + '%';
   set('nisa-pct', pct.toFixed(0) + '%');
 
+  // 取り崩しパラメータ
+  const wStartAge   = +document.getElementById('sl-w-start').value;
+  const wReturnRate = +document.getElementById('sl-w-return').value;
+  const wRate       = +document.getElementById('sl-w-rate').value;
+  const wYears      = +document.getElementById('sl-w-years').value;
+  set('lbl-w-start',  wStartAge + '歳');
+  set('lbl-w-return', wReturnRate.toFixed(1) + '%');
+  set('lbl-w-rate',   wRate.toFixed(1) + '%');
+  set('lbl-w-years',  wYears + '年');
+
   const data = simulate(principal, monthly, rate, fee, years, nisaCap);
-  renderChart(data, years, nisaCap);
-  renderMetrics(data, principal, nisaCap);
-  renderLegend();
+
+  // 取り崩しシミュレーション（取り崩しタブ時のみ）
+  let wData = null;
+  if (paramMode === 'withd') {
+    wData = simulateWithdrawal(data, rate, fee, age, years, wStartAge, wReturnRate, wRate, wYears);
+    set('w-monthly-amt', fmt(wData.monthlyWithdrawal));
+  }
+
+  const startYear = new Date().getFullYear();
+  renderChart(data, years, nisaCap, age, startYear, wData, wStartAge, wYears);
+  renderMetrics(data, principal, nisaCap, wData);
+  renderLegend(wData);
 }
 
 function set(id, val) { document.getElementById(id).textContent = val; }
@@ -868,37 +1041,116 @@ function simulate(principal, monthly, annualRate, fee, years, nisaCap) {
   return { net, gross, invested, limitYear, totalIn: Math.min(totalIn, nisaCap) };
 }
 
+// ── 取り崩しシミュレーション ──
+function simulateWithdrawal(accumData, annualRate, fee, currentAge, accumYears, wStartAge, wReturnRate, wRate, wYears) {
+  // 取り崩しフェーズの利率（信託報酬は積立時と同じ想定）
+  const netR = (wReturnRate - fee) / 100 / 12;
+  const accumEndAge = currentAge + accumYears;
+  // 取り崩し開始は積立終了以降に限定
+  const actualStartAge = Math.max(wStartAge, accumEndAge);
+  const gapYears = actualStartAge - accumEndAge;
+
+  // 積立終了時の残高からスタート
+  let bal = accumData.net[accumData.net.length - 1];
+
+  // ギャップ期間（積立終了〜取り崩し開始）：複利のみ
+  const gapNet = [];
+  for (let m = 1; m <= gapYears * 12; m++) {
+    bal = Math.max(0, bal * (1 + netR));
+    if (m % 12 === 0) gapNet.push(bal);
+  }
+
+  // 取り崩し開始時の月々引き出し額（固定）
+  const wStartBalance     = bal;
+  const monthlyWithdrawal = wStartBalance * wRate / 100 / 12;
+
+  // 取り崩し期間
+  const wNet = [];
+  let assetDepletedAge = null;
+  let totalWithdrawn = 0;
+  for (let m = 1; m <= wYears * 12; m++) {
+    bal = Math.max(0, bal * (1 + netR) - monthlyWithdrawal);
+    totalWithdrawn += monthlyWithdrawal;
+    if (bal <= 0 && assetDepletedAge === null) {
+      assetDepletedAge = actualStartAge + m / 12;
+    }
+    if (m % 12 === 0) wNet.push(bal);
+  }
+
+  return {
+    gapYears, gapNet,
+    wNet,
+    actualStartAge,
+    accumEndAge,
+    monthlyWithdrawal,
+    wStartBalance,
+    totalWithdrawn,
+    assetDepletedAge,
+  };
+}
+
 // ── Chart ──
-function renderChart(data, years, nisaCap) {
-  const labels = Array.from({length: years + 1}, (_, i) => i === 0 ? 'Start' : i + '年');
+function renderChart(data, years, nisaCap, startAge, startYear, wData, wStartAge, wYears) {
+  // グローバルに保存（ticks callback・tooltip から参照）
+  _chartStartAge  = startAge  ?? _chartStartAge;
+  _chartStartYear = startYear ?? _chartStartYear;
+
+  // 取り崩しモード時はチャートの総年数を延長
+  let totalYears = years;
+  if (wData) {
+    totalYears = (wData.actualStartAge - startAge) + wYears;
+  }
+
+  const labels = Array.from({length: totalYears + 1}, (_, i) => i);
   const { net, gross, invested } = data;
   const limLabel = mode === 'solo' ? 'おひとり生涯上限 ¥1,800万' : 'Partner 生涯上限 ¥3,600万';
+
+  // 取り崩しフェーズのデータを積立データに結合
+  let netFull = [...net], grossFull = [...gross], investedFull = [...invested];
+  let wLineData = null; // 取り崩しフェーズ専用ライン（null=非表示）
+
+  if (wData) {
+    // ギャップ＋取り崩しの全データを結合
+    const fullExtra = [...wData.gapNet, ...wData.wNet];
+    netFull      = [...net,      ...fullExtra];
+    grossFull    = [...gross,    ...fullExtra]; // 参考用（gross は取り崩し後は net と同じ扱い）
+    investedFull = [...invested, ...Array(fullExtra.length).fill(invested[invested.length - 1])];
+
+    // 取り崩しフェーズだけを強調するオレンジライン
+    // （積立＋ギャップ部分は null でスキップ）
+    const gapWOffset = years + wData.gapYears; // 取り崩し開始インデックス
+    wLineData = new Array(totalYears + 1).fill(null);
+    wLineData[gapWOffset] = netFull[gapWOffset]; // 接続点
+    for (let i = 0; i < wData.wNet.length; i++) {
+      wLineData[gapWOffset + 1 + i] = wData.wNet[i];
+    }
+  }
 
   const ds = [
     {
       label: '複利＋積立（手数料後）',
-      data: net,
+      data: netFull,
       borderColor: '#3fb950', backgroundColor: 'rgba(63,185,80,.07)',
       borderWidth: 2.5, fill: true, tension: 0.35,
       pointRadius: 0, pointHoverRadius: 5, order: 1,
     },
     {
       label: '複利＋積立（手数料なし・参考）',
-      data: gross,
+      data: grossFull,
       borderColor: '#8ddf98',
       borderWidth: 1.5, borderDash: [6,4], fill: false, tension: 0.35,
       pointRadius: 0, pointHoverRadius: 4, order: 2,
     },
     {
       label: '元本＋積立合計（投資額）',
-      data: invested,
+      data: investedFull,
       borderColor: '#58a6ff',
       borderWidth: 1.5, borderDash: [6,4], fill: false, tension: 0,
       pointRadius: 0, pointHoverRadius: 4, order: 3,
     },
     {
       label: limLabel,
-      data: Array(years + 1).fill(nisaCap),
+      data: Array(totalYears + 1).fill(nisaCap),
       borderColor: '#fb8f44',
       borderWidth: 1.5, borderDash: [10,5], fill: false, tension: 0,
       pointRadius: 0, order: 4,
@@ -908,10 +1160,23 @@ function renderChart(data, years, nisaCap) {
   if (mode === 'partner') {
     ds.push({
       label: 'おひとり分上限 ¥1,800万',
-      data: Array(years + 1).fill(NISA_SOLO),
+      data: Array(totalYears + 1).fill(NISA_SOLO),
       borderColor: '#b89a72',
       borderWidth: 1.5, borderDash: [10,5], fill: false, tension: 0,
       pointRadius: 0, order: 5,
+    });
+  }
+
+  // 取り崩しフェーズラインを追加（オレンジ・太め）
+  if (wLineData) {
+    ds.push({
+      label: '取り崩しフェーズ',
+      data: wLineData,
+      borderColor: '#fb8f44',
+      backgroundColor: 'rgba(251,143,68,.08)',
+      borderWidth: 2.5, fill: true, tension: 0.3,
+      pointRadius: 0, pointHoverRadius: 5, order: 0,
+      spanGaps: false,
     });
   }
 
@@ -933,6 +1198,7 @@ function renderChart(data, years, nisaCap) {
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        layout: { padding: { right: 28, top: 4 } },
         events: isTouch ? [] : ['mousemove', 'mouseout', 'click'],
         interaction: { mode: 'index', intersect: false },
         plugins: {
@@ -945,14 +1211,40 @@ function renderChart(data, years, nisaCap) {
             padding: 12,
             titleFont: { size: 13 }, bodyFont: { size: 13 },
             callbacks: {
+              title: items => {
+                const i = items[0].dataIndex;
+                return `${_chartStartAge + i}歳（${_chartStartYear + i}年）`;
+              },
               label: ctx => '  ' + ctx.dataset.label + ':  ' + fmt(ctx.parsed.y),
             }
           }
         },
         scales: {
           x: {
-            ticks: { color: initTick, font: { size: 11 }, maxTicksLimit: 12 },
-            grid:  { color: initGrid },
+            offset: true,
+            afterBuildTicks: function(scale) {
+              // maxTicksLimit に依存せず tick を完全に自前生成
+              // → 最初(0)と最後(max)を必ず含む10分割
+              const max = scale.max;
+              const n   = Math.min(10, max); // 分割数（最大10）
+              const seen = new Set();
+              const ticks = [];
+              for (let i = 0; i <= n; i++) {
+                const v = Math.round((i / n) * max);
+                if (!seen.has(v)) { seen.add(v); ticks.push({ value: v }); }
+              }
+              scale.ticks = ticks;
+            },
+            ticks: {
+              color: initTick,
+              font: { size: 11 },
+              maxRotation: 0,
+              minRotation: 0,
+              callback: function(value) {
+                return [`${_chartStartAge + value}歳`, String(_chartStartYear + value)];
+              }
+            },
+            grid: { color: initGrid },
           },
           y: {
             ticks: { color: initTick, font: { size: 11 }, callback: v => fmtAx(v) },
@@ -971,7 +1263,7 @@ function line(color, dashed) {
     : `<line x1="0" y1="6" x2="36" y2="6" stroke="${color}" stroke-width="2.5"/>`;
   return `<svg class="leg-svg" width="36" height="12">${d}</svg>`;
 }
-function renderLegend() {
+function renderLegend(wData) {
   const items = [
     { c:'#3fb950', d:false, t:'複利＋積立（手数料後）' },
     { c:'#8ddf98', d:true,  t:'複利＋積立（手数料なし・参考）' },
@@ -980,13 +1272,15 @@ function renderLegend() {
   ];
   if (mode === 'partner')
     items.push({ c:'#b89a72', d:true, t:'おひとり分上限 ¥1,800万' });
+  if (wData)
+    items.push({ c:'#fb8f44', d:false, t:'取り崩しフェーズ' });
 
   document.getElementById('legend-area').innerHTML =
     items.map(i => `<div class="leg-item">${line(i.c,i.d)}<span>${i.t}</span></div>`).join('');
 }
 
 // ── Metrics ──
-function renderMetrics(data, principal, nisaCap) {
+function renderMetrics(data, principal, nisaCap, wData) {
   const { net, gross, invested, limitYear } = data;
   const fNet   = net[net.length - 1];
   const fGross = gross[gross.length - 1];
@@ -1002,15 +1296,36 @@ function renderMetrics(data, principal, nisaCap) {
   set('bd-gain',      fmt(fNet - fIn));
   set('bd-fee',       fmt(fGross - fNet));
 
+  // 取り崩し結果
+  const wSection = document.getElementById('bd-withd-section');
+  if (wData) {
+    wSection.style.display = '';
+    set('bd-w-monthly', fmt(wData.monthlyWithdrawal));
+    set('bd-w-total',   fmt(wData.totalWithdrawn));
+    if (wData.assetDepletedAge !== null) {
+      const depAge = Math.floor(wData.assetDepletedAge);
+      const depYr  = _chartStartYear + (depAge - _chartStartAge);
+      document.getElementById('bd-w-life').textContent = `${depAge}歳（${depYr}年）で枯渇`;
+      document.getElementById('bd-w-life').className   = 'bd-val c-red';
+    } else {
+      document.getElementById('bd-w-life').textContent = '期間中持続';
+      document.getElementById('bd-w-life').className   = 'bd-val c-green';
+    }
+  } else {
+    wSection.style.display = 'none';
+  }
+
   const note = document.getElementById('limit-note');
   const il   = document.getElementById('inline-limit');
   if (limitYear) {
-    const lbl = mode === 'solo' ? 'おひとり ¥1,800万' : 'Partner ¥3,600万';
-    const msg = `${limitYear}年目に NISA 生涯上限（${lbl} ${fmt(nisaCap)}）に到達。以降は積立停止・複利のみ継続。`;
+    const lbl      = mode === 'solo' ? 'おひとり ¥1,800万' : 'Partner ¥3,600万';
+    const limitAge = _chartStartAge  + limitYear;
+    const limitYr  = _chartStartYear + limitYear;
+    const msg = `${limitAge}歳（${limitYr}年）にNISA生涯上限（${lbl} ${fmt(nisaCap)}）に到達。以降は積立停止・複利のみ継続。`;
     note.textContent = msg;
     note.style.display = 'block';
-    il.innerHTML = `<span class="il-year">${limitYear}年目</span>積立上限到達`;
-    il.style.display = window.innerWidth >= 1024 ? 'block' : 'none';
+    il.innerHTML = `<span class="il-year">${limitAge}歳で上限到達</span>${limitYr}年以降・複利のみ`;
+    il.style.display = (!isTouch && window.innerWidth >= 1024) ? 'block' : 'none';
   } else {
     note.style.display = 'none';
     il.style.display = 'none';
@@ -1030,68 +1345,100 @@ function updateRateMax() {
 window.addEventListener('resize', updateRateMax);
 updateRateMax();
 
-// ── スマートスライダー：つまみのみ反応 ＋ 低速時に感度を下げる ──
+// ── スマートスライダー：モバイルのみ適用 ──
+// つまみ以外への反応をブロック ＋ 低速時に感度を下げる
 (function () {
   const THUMB_HIT  = 32;   // つまみ中心からこのpx以内のみ受け付ける
   const SLOW_SPEED = 0.8;  // px/ms ← これより遅い = スローモード
   const SLOW_RATIO = 0.18; // スローモード時の感度倍率（通常の約1/5）
 
   function thumbCenterX(el) {
-    const r   = el.getBoundingClientRect();
-    const thumbW = window.innerWidth < 1024 ? 26 : 18; // CSSのつまみサイズに合わせる
+    const r      = el.getBoundingClientRect();
+    const thumbW = 26; // モバイルのつまみサイズ（CSS と合わせる）
     const trackW = r.width - thumbW;
     const pct    = (+el.value - +el.min) / (+el.max - +el.min);
     return r.left + thumbW / 2 + pct * trackW;
   }
 
   function smartSlider(el) {
-    let active = false, prevX = 0, prevT = 0, frac = 0;
+    let active    = false;
+    let prevX     = 0, prevT = 0, frac = 0;
+    let lastValid = +el.value; // つまみドラッグで確定した最後の値
 
+    // ① touchstart でつまみ外タップをブロック（native処理より先に発火）
+    el.addEventListener('touchstart', function (e) {
+      const tx = e.touches[0].clientX;
+      if (Math.abs(tx - thumbCenterX(el)) > THUMB_HIT) {
+        e.preventDefault(); // native range の値ジャンプを阻止
+        e.stopPropagation();
+      }
+    }, { passive: false });
+
+    // ② inputイベントをキャプチャし、ドラッグ中以外の変化を強制的に元に戻す
+    //    （touchstart の preventDefault をすり抜けた場合の保険）
+    el.addEventListener('input', function (e) {
+      if (!active) {
+        el.value = lastValid; // 値を戻す
+        e.stopImmediatePropagation(); // onSlider が呼ばれないようにする
+      }
+    }, true); // capture = true で oninput 属性より先に発火
+
+    // ③ pointerdown：つまみ上ならドラッグ開始
     el.addEventListener('pointerdown', function (e) {
-      // つまみ以外をタップした場合は完全に無視
       if (Math.abs(e.clientX - thumbCenterX(el)) > THUMB_HIT) {
         e.preventDefault();
-        e.stopPropagation();
         return;
       }
-      active = true;
-      prevX  = e.clientX;
-      prevT  = Date.now();
-      frac   = 0;
+      active    = true;
+      prevX     = e.clientX;
+      prevT     = Date.now();
+      frac      = 0;
+      lastValid = +el.value;
       el.setPointerCapture(e.pointerId); // 指がスライダー外に出ても追跡
       haptic();
     }, { passive: false });
 
+    // ④ pointermove：感度制御しながら値を更新
     el.addEventListener('pointermove', function (e) {
       if (!active) return;
       const now   = Date.now();
       const dt    = Math.max(now - prevT, 1);
       const dx    = e.clientX - prevX;
-      const speed = Math.abs(dx) / dt;           // px/ms
+      const speed = Math.abs(dx) / dt;
       const ratio = speed < SLOW_SPEED ? SLOW_RATIO : 1;
 
       const r     = el.getBoundingClientRect();
       const range = +el.max - +el.min;
-      frac += (dx / r.width) * range * ratio;    // 端数を累積
+      frac += (dx / r.width) * range * ratio;
 
       const step  = +el.step || 1;
-      const steps = Math.trunc(frac / step);     // 何ステップ分たまったか
+      const steps = Math.trunc(frac / step);
       if (steps !== 0) {
-        el.value = Math.min(+el.max, Math.max(+el.min, +el.value + steps * step));
-        frac    -= steps * step;                 // 端数を持ち越す
+        lastValid = Math.min(+el.max, Math.max(+el.min, +el.value + steps * step));
+        el.value  = lastValid;
+        frac     -= steps * step;
         el.dispatchEvent(new Event('input', { bubbles: true }));
       }
       prevX = e.clientX;
       prevT = now;
     });
 
+    // ⑤ 指を離したらリセット
     ['pointerup', 'pointercancel'].forEach(function (t) {
-      el.addEventListener(t, function () { active = false; frac = 0; });
+      el.addEventListener(t, function () {
+        active    = false;
+        frac      = 0;
+        lastValid = +el.value;
+      });
     });
   }
 
-  ['sl-principal', 'sl-monthly', 'sl-rate', 'sl-fee', 'sl-years']
-    .forEach(function (id) { smartSlider(document.getElementById(id)); });
+  // モバイル（タッチデバイス）のみ適用。デスクトップはネイティブ動作を維持。
+  if (isTouch) {
+    ['sl-age', 'sl-principal', 'sl-monthly', 'sl-rate', 'sl-fee', 'sl-years',
+     'sl-w-start', 'sl-w-return', 'sl-w-rate', 'sl-w-years']
+      .forEach(function (id) { smartSlider(document.getElementById(id)); });
+  }
 })();
 
 onSlider();
