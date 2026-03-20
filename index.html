@@ -230,7 +230,10 @@ input[type=range] {
   outline: none;
   cursor: pointer;
   display: block;
-  touch-action: none; /* カスタムポインター制御のためブラウザデフォルトを無効化 */
+  touch-action: pan-y;
+  -webkit-touch-callout: none; /* iOS長押しコールアウト無効 */
+  user-select: none;
+  -webkit-user-select: none;
 }
 input[type=range]::-webkit-slider-thumb {
   -webkit-appearance: none;
@@ -563,6 +566,11 @@ html.beige .inline-limit { color: #a02020; }
   border-radius: 12px;
   border: 1px solid var(--border);
   display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.w-start-bal-row {
+  display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 8px;
@@ -575,6 +583,37 @@ html.beige .inline-limit { color: #a02020; }
   color: var(--orange);
   white-space: nowrap;
 }
+/* ── 5年ごとマイルストーン ── */
+.w-milestone-box {
+  margin-top: 12px;
+  padding: 10px 14px;
+  background: var(--surf2);
+  border-radius: 12px;
+  border: 1px solid var(--border);
+}
+.w-milestone-title {
+  font-size: 0.75rem;
+  color: var(--sub);
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.w-milestone-table { width: 100%; border-collapse: collapse; }
+.w-milestone-table tr { border-bottom: 1px solid var(--border); }
+.w-milestone-table tr:last-child { border-bottom: none; }
+.w-milestone-table td {
+  font-size: 0.78rem;
+  padding: 4px 2px;
+  color: var(--sub);
+}
+.w-milestone-table td:nth-child(2),
+.w-milestone-table td:nth-child(3) {
+  text-align: right;
+  font-family: 'Google Sans', monospace;
+}
+.w-milestone-table td:nth-child(2) { color: var(--text); }
+.w-milestone-table td:nth-child(3) { color: var(--orange); font-weight: 600; }
 /* ── Withdrawal results in breakdown ── */
 .bd-section-title {
   font-size: 0.65rem;
@@ -702,7 +741,7 @@ html.beige .inline-limit { color: #a02020; }
               <span class="sl-name">信託報酬（年）</span>
               <span class="sl-val c-red" id="lbl-fee">0.2%</span>
             </div>
-            <input type="range" id="sl-fee" min="0" max="8" step="0.1" value="0.2" oninput="onSlider(true)">
+            <input type="range" id="sl-fee" min="0" max="3.5" step="0.1" value="0.2" oninput="onSlider(true)">
           </div>
 
           <div class="sl-group" style="margin-bottom:0">
@@ -734,6 +773,14 @@ html.beige .inline-limit { color: #a02020; }
 
           <div class="sl-group">
             <div class="sl-row">
+              <span class="sl-name">信託報酬（取り崩し期・年）</span>
+              <span class="sl-val c-red" id="lbl-w-fee">0.2%</span>
+            </div>
+            <input type="range" id="sl-w-fee" min="0" max="3.5" step="0.1" value="0.2" oninput="onSlider(true)">
+          </div>
+
+          <div class="sl-group">
+            <div class="sl-row">
               <span class="sl-name">年間取り崩し率</span>
               <span class="sl-val c-orange" id="lbl-w-rate">4.0%</span>
             </div>
@@ -748,10 +795,22 @@ html.beige .inline-limit { color: #a02020; }
             <input type="range" id="sl-w-years" min="5" max="50" step="1" value="30" oninput="onSlider(true)">
           </div>
 
-          <!-- 計算された月々取り崩し額 -->
+          <!-- 取り崩し開始時残高 + 月々取り崩し額 -->
           <div class="w-monthly-box">
-            <span class="w-monthly-lbl">月々の取り崩し額<br>（開始時点の残高 × 年率 ÷ 12）</span>
-            <span class="w-monthly-val" id="w-monthly-amt">—</span>
+            <div class="w-start-bal-row">
+              <span class="w-monthly-lbl">取り崩し開始時残高</span>
+              <span class="w-monthly-val" id="w-start-bal" style="font-size:1.05rem;">—</span>
+            </div>
+            <div class="w-start-bal-row" style="margin-top:6px;">
+              <span class="w-monthly-lbl">取り崩し開始時の月々取り崩し額<br><span style="font-size:0.72rem;opacity:.7;">（開始時残高 × 年率 ÷ 12）</span></span>
+              <span class="w-monthly-val" id="w-monthly-amt">—</span>
+            </div>
+          </div>
+
+          <!-- 5年ごとの月々取り崩し額 -->
+          <div class="w-milestone-box" id="w-milestone-box" style="display:none">
+            <div class="w-milestone-title">5年ごとの月々取り崩し額</div>
+            <table class="w-milestone-table" id="w-milestone-table"></table>
           </div>
         </div><!-- /panel-withd -->
 
@@ -956,10 +1015,12 @@ function onSlider(triggerHaptic = false) {
   // 取り崩しパラメータ
   const wStartAge   = +document.getElementById('sl-w-start').value;
   const wReturnRate = +document.getElementById('sl-w-return').value;
+  const wFee        = +document.getElementById('sl-w-fee').value;
   const wRate       = +document.getElementById('sl-w-rate').value;
   const wYears      = +document.getElementById('sl-w-years').value;
   set('lbl-w-start',  wStartAge + '歳');
   set('lbl-w-return', wReturnRate.toFixed(1) + '%');
+  set('lbl-w-fee',    wFee.toFixed(1) + '%');
   set('lbl-w-rate',   wRate.toFixed(1) + '%');
   set('lbl-w-years',  wYears + '年');
 
@@ -968,8 +1029,14 @@ function onSlider(triggerHaptic = false) {
   // 取り崩しシミュレーション（取り崩しタブ時のみ）
   let wData = null;
   if (paramMode === 'withd') {
-    wData = simulateWithdrawal(data, rate, fee, age, years, wStartAge, wReturnRate, wRate, wYears);
-    set('w-monthly-amt', fmt(wData.monthlyWithdrawal));
+    wData = simulateWithdrawal(data, age, years, wStartAge, wReturnRate, wFee, wRate, wYears);
+    // 取り崩し開始時残高・月々取り崩し額
+    set('w-start-bal',   fmt(wData.wStartBalance));
+    set('w-monthly-amt', fmt(wData.milestones[0]?.monthly ?? 0));
+    // 5年ごとマイルストーン表示
+    renderWithdrawMilestones(wData.milestones, wData.actualStartAge);
+  } else {
+    document.getElementById('w-milestone-box').style.display = 'none';
   }
 
   const startYear = new Date().getFullYear();
@@ -1042,15 +1109,13 @@ function simulate(principal, monthly, annualRate, fee, years, nisaCap) {
 }
 
 // ── 取り崩しシミュレーション ──
-function simulateWithdrawal(accumData, annualRate, fee, currentAge, accumYears, wStartAge, wReturnRate, wRate, wYears) {
-  // 取り崩しフェーズの利率（信託報酬は積立時と同じ想定）
-  const netR = (wReturnRate - fee) / 100 / 12;
-  const accumEndAge = currentAge + accumYears;
-  // 取り崩し開始は積立終了以降に限定
+function simulateWithdrawal(accumData, currentAge, accumYears, wStartAge, wReturnRate, wFee, wRate, wYears) {
+  const netR       = (wReturnRate - wFee) / 100 / 12;  // 取り崩し期の月次実質利率
+  const accumEndAge   = currentAge + accumYears;
   const actualStartAge = Math.max(wStartAge, accumEndAge);
-  const gapYears = actualStartAge - accumEndAge;
+  const gapYears   = actualStartAge - accumEndAge;
 
-  // 積立終了時の残高からスタート
+  // 積立終了時の残高
   let bal = accumData.net[accumData.net.length - 1];
 
   // ギャップ期間（積立終了〜取り崩し開始）：複利のみ
@@ -1060,30 +1125,51 @@ function simulateWithdrawal(accumData, annualRate, fee, currentAge, accumYears, 
     if (m % 12 === 0) gapNet.push(bal);
   }
 
-  // 取り崩し開始時の月々引き出し額（固定）
-  const wStartBalance     = bal;
-  const monthlyWithdrawal = wStartBalance * wRate / 100 / 12;
+  const wStartBalance = bal;          // 取り崩し開始時残高
+  const annualWRate   = wRate / 100;  // 年間取り崩し率
 
-  // 取り崩し期間
+  // 取り崩し期間：毎月 残高 × 年率/12 を引き出す（定率）
   const wNet = [];
+  const milestones = [];             // 5年ごとのスナップショット
   let assetDepletedAge = null;
-  let totalWithdrawn = 0;
+  let totalWithdrawn   = 0;
+
   for (let m = 1; m <= wYears * 12; m++) {
-    bal = Math.max(0, bal * (1 + netR) - monthlyWithdrawal);
-    totalWithdrawn += monthlyWithdrawal;
+    const monthlyW = bal * annualWRate / 12;  // 定率：残高に連動
+    bal = Math.max(0, bal * (1 + netR) - monthlyW);
+    totalWithdrawn += monthlyW;
+
     if (bal <= 0 && assetDepletedAge === null) {
       assetDepletedAge = actualStartAge + m / 12;
     }
-    if (m % 12 === 0) wNet.push(bal);
+    if (m % 12 === 0) {
+      wNet.push(bal);
+      // 5年ごと（取り崩し開始時 m=0 も含む）
+      const yr = m / 12;
+      if (yr % 5 === 0 || yr === 1) {
+        milestones.push({
+          yr,
+          age:     actualStartAge + yr,
+          balance: bal,
+          monthly: bal * annualWRate / 12,
+        });
+      }
+    }
   }
 
+  // 取り崩し開始時点（yr=0）のマイルストーンを先頭に追加
+  milestones.unshift({
+    yr: 0,
+    age: actualStartAge,
+    balance: wStartBalance,
+    monthly: wStartBalance * annualWRate / 12,
+  });
+
   return {
-    gapYears, gapNet,
-    wNet,
-    actualStartAge,
-    accumEndAge,
-    monthlyWithdrawal,
+    gapYears, gapNet, wNet,
+    actualStartAge, accumEndAge,
     wStartBalance,
+    milestones,
     totalWithdrawn,
     assetDepletedAge,
   };
@@ -1263,6 +1349,26 @@ function line(color, dashed) {
     : `<line x1="0" y1="6" x2="36" y2="6" stroke="${color}" stroke-width="2.5"/>`;
   return `<svg class="leg-svg" width="36" height="12">${d}</svg>`;
 }
+// ── 5年ごとマイルストーンテーブル描画 ──
+function renderWithdrawMilestones(milestones, startAge) {
+  const box   = document.getElementById('w-milestone-box');
+  const table = document.getElementById('w-milestone-table');
+  if (!milestones || milestones.length === 0) {
+    box.style.display = 'none';
+    return;
+  }
+  box.style.display = 'block';
+  table.innerHTML = milestones.map(m => {
+    const label = m.yr === 0 ? '開始時' : `+${m.yr}年`;
+    const depleted = m.balance <= 0;
+    return `<tr>
+      <td>${label}（${Math.floor(m.age)}歳）</td>
+      <td>${depleted ? '—' : fmt(m.balance)}</td>
+      <td>${depleted ? '<span style="color:var(--red)">資産枯渇</span>' : fmt(m.monthly) + '/月'}</td>
+    </tr>`;
+  }).join('');
+}
+
 function renderLegend(wData) {
   const items = [
     { c:'#3fb950', d:false, t:'複利＋積立（手数料後）' },
@@ -1300,7 +1406,7 @@ function renderMetrics(data, principal, nisaCap, wData) {
   const wSection = document.getElementById('bd-withd-section');
   if (wData) {
     wSection.style.display = '';
-    set('bd-w-monthly', fmt(wData.monthlyWithdrawal));
+    set('bd-w-monthly', fmt(wData.milestones[0]?.monthly ?? 0));
     set('bd-w-total',   fmt(wData.totalWithdrawn));
     if (wData.assetDepletedAge !== null) {
       const depAge = Math.floor(wData.assetDepletedAge);
@@ -1346,64 +1452,34 @@ window.addEventListener('resize', updateRateMax);
 updateRateMax();
 
 // ── スマートスライダー：モバイルのみ適用 ──
-// つまみ以外への反応をブロック ＋ 低速時に感度を下げる
+// 設計方針:
+//   - onMove / cleanup を1スライダーにつき1度だけ定義（同一参照）
+//     → pointerdownのたびに関数を作り直さないため、リスナーが蓄積しない
+//   - setPointerCapture 不使用 → グローバルスクロールロックが発生しない
+//   - contextmenu でも必ず cleanup → 長押しポップアップ後でもスクロール継続
 (function () {
-  const THUMB_HIT  = 32;   // つまみ中心からこのpx以内のみ受け付ける
-  const SLOW_SPEED = 0.8;  // px/ms ← これより遅い = スローモード
-  const SLOW_RATIO = 0.18; // スローモード時の感度倍率（通常の約1/5）
+  const THUMB_HIT  = 32;   // つまみ中心から何px以内をタップと認識するか
+  const SLOW_SPEED = 0.8;  // px/ms：これより遅い動作 = スローモード
+  const SLOW_RATIO = 0.18; // スローモード時の感度（通常の約1/5）
 
+  // つまみの中心X座標を推定
   function thumbCenterX(el) {
-    const r      = el.getBoundingClientRect();
-    const thumbW = 26; // モバイルのつまみサイズ（CSS と合わせる）
-    const trackW = r.width - thumbW;
-    const pct    = (+el.value - +el.min) / (+el.max - +el.min);
-    return r.left + thumbW / 2 + pct * trackW;
+    const r   = el.getBoundingClientRect();
+    const pct = (+el.value - +el.min) / (+el.max - +el.min);
+    return r.left + 13 + pct * (r.width - 26); // 26 = CSS thumbサイズ
   }
 
   function smartSlider(el) {
     let active    = false;
     let prevX     = 0, prevT = 0, frac = 0;
-    let lastValid = +el.value; // つまみドラッグで確定した最後の値
+    let lastValid = +el.value;
 
-    // ① touchstart でつまみ外タップをブロック（native処理より先に発火）
-    el.addEventListener('touchstart', function (e) {
-      const tx = e.touches[0].clientX;
-      if (Math.abs(tx - thumbCenterX(el)) > THUMB_HIT) {
-        e.preventDefault(); // native range の値ジャンプを阻止
-        e.stopPropagation();
-      }
-    }, { passive: false });
-
-    // ② inputイベントをキャプチャし、ドラッグ中以外の変化を強制的に元に戻す
-    //    （touchstart の preventDefault をすり抜けた場合の保険）
-    el.addEventListener('input', function (e) {
-      if (!active) {
-        el.value = lastValid; // 値を戻す
-        e.stopImmediatePropagation(); // onSlider が呼ばれないようにする
-      }
-    }, true); // capture = true で oninput 属性より先に発火
-
-    // ③ pointerdown：つまみ上ならドラッグ開始
-    el.addEventListener('pointerdown', function (e) {
-      if (Math.abs(e.clientX - thumbCenterX(el)) > THUMB_HIT) {
-        e.preventDefault();
-        return;
-      }
-      active    = true;
-      prevX     = e.clientX;
-      prevT     = Date.now();
-      frac      = 0;
-      lastValid = +el.value;
-      el.setPointerCapture(e.pointerId); // 指がスライダー外に出ても追跡
-      haptic();
-    }, { passive: false });
-
-    // ④ pointermove：感度制御しながら値を更新
-    el.addEventListener('pointermove', function (e) {
+    // ─── onMove / cleanup を一度だけ定義（参照が常に同じ） ───────────────
+    function onMove(ev) {
       if (!active) return;
       const now   = Date.now();
       const dt    = Math.max(now - prevT, 1);
-      const dx    = e.clientX - prevX;
+      const dx    = ev.clientX - prevX;
       const speed = Math.abs(dx) / dt;
       const ratio = speed < SLOW_SPEED ? SLOW_RATIO : 1;
 
@@ -1419,25 +1495,62 @@ updateRateMax();
         frac     -= steps * step;
         el.dispatchEvent(new Event('input', { bubbles: true }));
       }
-      prevX = e.clientX;
+      prevX = ev.clientX;
       prevT = now;
-    });
+    }
 
-    // ⑤ 指を離したらリセット
-    ['pointerup', 'pointercancel'].forEach(function (t) {
-      el.addEventListener(t, function () {
-        active    = false;
-        frac      = 0;
-        lastValid = +el.value;
-      });
-    });
+    function cleanup() {
+      if (!active) return; // 二重クリーンアップを防止
+      active    = false;
+      frac      = 0;
+      lastValid = +el.value;
+      // 同一関数参照なので確実に解除できる
+      document.removeEventListener('pointermove',   onMove);
+      document.removeEventListener('pointerup',     cleanup);
+      document.removeEventListener('pointercancel', cleanup);
+      document.removeEventListener('contextmenu',   cleanup);
+    }
+    // ──────────────────────────────────────────────────────────────────────
+
+    // 長押しコンテキストメニューを抑止
+    el.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+
+    // inputキャプチャ：ドラッグ外（トラックタップ等）の値変化を差し戻す
+    el.addEventListener('input', function (e) {
+      if (!active) {
+        el.value = lastValid;
+        e.stopImmediatePropagation();
+      }
+    }, true);
+
+    // pointerdown：毎回まず cleanup → つまみ判定 → ドラッグ開始
+    el.addEventListener('pointerdown', function (e) {
+      cleanup(); // 前回の残留リスナーを必ず撤去してから開始
+      if (Math.abs(e.clientX - thumbCenterX(el)) > THUMB_HIT) return;
+
+      active    = true;
+      prevX     = e.clientX;
+      prevT     = Date.now();
+      frac      = 0;
+      lastValid = +el.value;
+      haptic();
+
+      // 同一関数参照を登録（重複登録はブラウザが自動で無視する）
+      document.addEventListener('pointermove',   onMove);
+      document.addEventListener('pointerup',     cleanup);
+      document.addEventListener('pointercancel', cleanup);
+      document.addEventListener('contextmenu',   cleanup); // 長押し時の保険
+    }, { passive: true });
   }
 
-  // モバイル（タッチデバイス）のみ適用。デスクトップはネイティブ動作を維持。
+  // モバイル（タッチデバイス）のみ適用
   if (isTouch) {
     ['sl-age', 'sl-principal', 'sl-monthly', 'sl-rate', 'sl-fee', 'sl-years',
-     'sl-w-start', 'sl-w-return', 'sl-w-rate', 'sl-w-years']
-      .forEach(function (id) { smartSlider(document.getElementById(id)); });
+     'sl-w-start', 'sl-w-return', 'sl-w-fee', 'sl-w-rate', 'sl-w-years']
+      .forEach(function (id) {
+        var el = document.getElementById(id);
+        if (el) smartSlider(el);
+      });
   }
 })();
 
