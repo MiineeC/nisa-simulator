@@ -229,6 +229,7 @@ input[type=range] {
   outline: none;
   cursor: pointer;
   display: block;
+  touch-action: none; /* カスタムポインター制御のためブラウザデフォルトを無効化 */
 }
 input[type=range]::-webkit-slider-thumb {
   -webkit-appearance: none;
@@ -589,7 +590,7 @@ html.beige .inline-limit { color: #a02020; }
             <span class="sl-name"><span class="lbl-desktop">初期元本</span><span class="lbl-mobile">初期元本（投資済み金額）</span></span>
             <span class="sl-val c-green" id="lbl-principal">¥100万</span>
           </div>
-          <input type="range" id="sl-principal" min="0" max="18000000" step="200000" value="1000000" onpointerdown="haptic()" oninput="onSlider(true)">
+          <input type="range" id="sl-principal" min="0" max="18000000" step="200000" value="1000000" oninput="onSlider(true)">
         </div>
 
         <div class="sl-group">
@@ -597,7 +598,7 @@ html.beige .inline-limit { color: #a02020; }
             <span class="sl-name">毎月積立額</span>
             <span class="sl-val c-blue" id="lbl-monthly">¥5万</span>
           </div>
-          <input type="range" id="sl-monthly" min="0" max="150000" step="5000" value="50000" onpointerdown="haptic()" oninput="onSlider(true)">
+          <input type="range" id="sl-monthly" min="0" max="150000" step="5000" value="50000" oninput="onSlider(true)">
           <div class="nisa-bar-wrap">
             <div class="nisa-bar-top">
               <span>NISA 年間非課税枠 利用率</span>
@@ -612,7 +613,7 @@ html.beige .inline-limit { color: #a02020; }
             <span class="sl-name">年利率（期待リターン）</span>
             <span class="sl-val c-yellow" id="lbl-rate">5.0%</span>
           </div>
-          <input type="range" id="sl-rate" min="0" max="35" step="0.5" value="5" onpointerdown="haptic()" oninput="onSlider(true)">
+          <input type="range" id="sl-rate" min="0" max="35" step="0.5" value="5" oninput="onSlider(true)">
         </div>
 
         <div class="sl-group">
@@ -620,7 +621,7 @@ html.beige .inline-limit { color: #a02020; }
             <span class="sl-name">信託報酬（年）</span>
             <span class="sl-val c-red" id="lbl-fee">0.2%</span>
           </div>
-          <input type="range" id="sl-fee" min="0" max="8" step="0.1" value="0.2" onpointerdown="haptic()" oninput="onSlider(true)">
+          <input type="range" id="sl-fee" min="0" max="8" step="0.1" value="0.2" oninput="onSlider(true)">
         </div>
 
         <div class="sl-group" style="margin-bottom:0">
@@ -628,7 +629,7 @@ html.beige .inline-limit { color: #a02020; }
             <span class="sl-name">運用年数</span>
             <span class="sl-val c-text" id="lbl-years">20年</span>
           </div>
-          <input type="range" id="sl-years" min="1" max="90" step="1" value="20" onpointerdown="haptic()" oninput="onSlider(true)">
+          <input type="range" id="sl-years" min="1" max="90" step="1" value="20" oninput="onSlider(true)">
         </div>
       </div>
     </div>
@@ -1028,6 +1029,70 @@ function updateRateMax() {
 }
 window.addEventListener('resize', updateRateMax);
 updateRateMax();
+
+// ── スマートスライダー：つまみのみ反応 ＋ 低速時に感度を下げる ──
+(function () {
+  const THUMB_HIT  = 32;   // つまみ中心からこのpx以内のみ受け付ける
+  const SLOW_SPEED = 0.8;  // px/ms ← これより遅い = スローモード
+  const SLOW_RATIO = 0.18; // スローモード時の感度倍率（通常の約1/5）
+
+  function thumbCenterX(el) {
+    const r   = el.getBoundingClientRect();
+    const thumbW = window.innerWidth < 1024 ? 26 : 18; // CSSのつまみサイズに合わせる
+    const trackW = r.width - thumbW;
+    const pct    = (+el.value - +el.min) / (+el.max - +el.min);
+    return r.left + thumbW / 2 + pct * trackW;
+  }
+
+  function smartSlider(el) {
+    let active = false, prevX = 0, prevT = 0, frac = 0;
+
+    el.addEventListener('pointerdown', function (e) {
+      // つまみ以外をタップした場合は完全に無視
+      if (Math.abs(e.clientX - thumbCenterX(el)) > THUMB_HIT) {
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
+      active = true;
+      prevX  = e.clientX;
+      prevT  = Date.now();
+      frac   = 0;
+      el.setPointerCapture(e.pointerId); // 指がスライダー外に出ても追跡
+      haptic();
+    }, { passive: false });
+
+    el.addEventListener('pointermove', function (e) {
+      if (!active) return;
+      const now   = Date.now();
+      const dt    = Math.max(now - prevT, 1);
+      const dx    = e.clientX - prevX;
+      const speed = Math.abs(dx) / dt;           // px/ms
+      const ratio = speed < SLOW_SPEED ? SLOW_RATIO : 1;
+
+      const r     = el.getBoundingClientRect();
+      const range = +el.max - +el.min;
+      frac += (dx / r.width) * range * ratio;    // 端数を累積
+
+      const step  = +el.step || 1;
+      const steps = Math.trunc(frac / step);     // 何ステップ分たまったか
+      if (steps !== 0) {
+        el.value = Math.min(+el.max, Math.max(+el.min, +el.value + steps * step));
+        frac    -= steps * step;                 // 端数を持ち越す
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+      prevX = e.clientX;
+      prevT = now;
+    });
+
+    ['pointerup', 'pointercancel'].forEach(function (t) {
+      el.addEventListener(t, function () { active = false; frac = 0; });
+    });
+  }
+
+  ['sl-principal', 'sl-monthly', 'sl-rate', 'sl-fee', 'sl-years']
+    .forEach(function (id) { smartSlider(document.getElementById(id)); });
+})();
 
 onSlider();
 </script>
