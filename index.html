@@ -23,6 +23,7 @@
   --yellow:   #c99a2e;
   --red:      #d94f47;
   --orange:   #d97a38;
+  --pension:  #a78bfa;
   --gblue:    #4285f4;
   --gteal:    #1aa260;
 }
@@ -206,8 +207,9 @@ html, body {
 .c-blue   { color: var(--blue);   }
 .c-yellow { color: var(--yellow); }
 .c-red    { color: var(--red);    }
-.c-orange { color: var(--orange); }
-.c-text   { color: var(--charcoal); }
+.c-orange  { color: var(--orange);  }
+.c-pension { color: var(--pension); }
+.c-text    { color: var(--charcoal); }
 
 /* ── Sliders ── */
 .sl-group { margin-bottom: 18px; }
@@ -509,6 +511,7 @@ html.beige {
   --text:     #1c1917;
   --sub:      #7c6f62;
   --charcoal: #7a6d62;
+  --pension:  #6d28d9;
 }
 html.beige .page-header h1 {
   background: linear-gradient(135deg, #1c1917 0%, #4285f4 55%, #1aa260 100%);
@@ -615,6 +618,27 @@ html.beige .inline-limit { color: #a02020; }
 }
 .w-milestone-table td:nth-child(2) { color: var(--text); }
 .w-milestone-table td:nth-child(3) { color: var(--orange); font-weight: 600; }
+/* ── 年金セクション区切り ── */
+.w-section-divider {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 20px 0 16px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--sub);
+}
+.w-section-divider::before,
+.w-section-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+.w-section-divider span { color: var(--pension); }
+
 /* ── Withdrawal results in breakdown ── */
 .bd-section-title {
   font-size: 0.65rem;
@@ -846,11 +870,43 @@ html.beige .inline-limit { color: #a02020; }
             </div>
           </div>
 
-          <!-- 5年ごとの月々取り崩し額 -->
+          <!-- 10年ごとの月々取り崩し額 -->
           <div class="w-milestone-box" id="w-milestone-box" style="display:none">
-            <div class="w-milestone-title">5年ごとの月々取り崩し額</div>
+            <div class="w-milestone-title">10年ごとの月々取り崩し額</div>
             <table class="w-milestone-table" id="w-milestone-table"></table>
           </div>
+
+          <!-- ── 年金設定 ── -->
+          <div class="w-section-divider"><span>年金</span></div>
+
+          <div class="sl-group">
+            <div class="sl-row">
+              <span class="sl-name">ねんきん定期便の月額</span>
+              <span class="sl-val c-pension" id="lbl-pension-monthly">¥6.5万</span>
+            </div>
+            <input type="range" id="sl-pension-monthly" min="0" max="300000" step="10000" value="65000" oninput="onSlider(true)">
+          </div>
+
+          <div class="sl-group" style="margin-bottom:0">
+            <div class="sl-row">
+              <span class="sl-name">年金受給開始年齢</span>
+              <span class="sl-val c-pension" id="lbl-pension-start">65歳</span>
+            </div>
+            <input type="range" id="sl-pension-start" min="60" max="75" step="1" value="65" oninput="onSlider(true)">
+          </div>
+
+          <!-- 実受給月額 + 合計月収 -->
+          <div class="w-monthly-box" style="margin-top:14px;">
+            <div class="w-start-bal-row">
+              <span class="w-monthly-lbl">実受給月額<br><span style="font-size:0.72rem;opacity:.7;">（繰上げ / 繰下げ補正後）</span></span>
+              <span class="w-monthly-val" id="pension-actual-monthly" style="color:var(--pension);">—</span>
+            </div>
+            <div id="pension-combined-row" class="w-start-bal-row" style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border);display:none">
+              <span class="w-monthly-lbl">NISA取り崩し ＋ 年金<br><span id="pension-combined-note" style="font-size:0.71rem;opacity:.65;"></span></span>
+              <span class="w-monthly-val" id="pension-combined-monthly" style="color:var(--pension);">—</span>
+            </div>
+          </div>
+
         </div><!-- /panel-withd -->
 
       </div>
@@ -906,6 +962,18 @@ html.beige .inline-limit { color: #a02020; }
       <div class="bd-row">
         <span class="bd-lbl">手数料損失</span>
         <span class="bd-val c-red" id="bd-fee">—</span>
+      </div>
+      <!-- 年金（取り崩し＋年金設定時のみ表示） -->
+      <div id="bd-pension-section" style="display:none">
+        <div class="bd-section-title" style="color:var(--pension)">年金</div>
+        <div class="bd-row">
+          <span class="bd-lbl">実受給月額</span>
+          <span class="bd-val c-pension" id="bd-pension-monthly">—</span>
+        </div>
+        <div class="bd-row">
+          <span class="bd-lbl">NISA取り崩し＋年金</span>
+          <span class="bd-val c-pension" id="bd-pension-combined">—</span>
+        </div>
       </div>
       <!-- 取り崩し結果（取り崩しモード時のみ表示） -->
       <div id="bd-withd-section" style="display:none">
@@ -1075,6 +1143,18 @@ function onSlider(triggerHaptic = false) {
   set('lbl-w-rate',   wRate.toFixed(1) + '%');
   set('lbl-w-years',  wYears + '年');
 
+  // 年金パラメータ
+  const pensionBase  = +document.getElementById('sl-pension-monthly').value;
+  const pensionStart = +document.getElementById('sl-pension-start').value;
+  set('lbl-pension-monthly', fmt(pensionBase));
+  set('lbl-pension-start',   pensionStart + '歳');
+  // 繰上げ/繰下げ補正（基準 65 歳）
+  const monthsDiff    = (pensionStart - 65) * 12;
+  const pensionFactor = monthsDiff < 0
+    ? 1 + monthsDiff * 0.004   // 繰上げ: -0.4%/月
+    : 1 + monthsDiff * 0.007;  // 繰下げ: +0.7%/月 (差0の場合 ×1)
+  const actualPensionMonthly = Math.round(pensionBase * pensionFactor);
+
   const data = simulate(principal, monthly, rate, fee, years, nisaCap);
 
   // 取り崩しシミュレーション（取り崩しタブ時のみ）
@@ -1094,6 +1174,58 @@ function onSlider(triggerHaptic = false) {
   renderChart(data, years, nisaCap, age, startYear, wData, wStartAge, wYears);
   renderMetrics(data, principal, nisaCap, wData);
   renderLegend(wData);
+
+  // ── 年金表示 ──
+  const pensionActualEl   = document.getElementById('pension-actual-monthly');
+  const pensionCombinedRow = document.getElementById('pension-combined-row');
+  const pensionCombinedEl  = document.getElementById('pension-combined-monthly');
+  const pensionCombinedNote = document.getElementById('pension-combined-note');
+  const bdPensionSection   = document.getElementById('bd-pension-section');
+
+  if (paramMode === 'withd') {
+    // 実受給月額（補正後）
+    pensionActualEl.textContent = actualPensionMonthly > 0
+      ? fmt(actualPensionMonthly) + '/月'
+      : '—';
+
+    // NISA + 年金の合計月収
+    if (wData && actualPensionMonthly > 0) {
+      const wEndAge = wData.actualStartAge + wYears;
+      if (pensionStart <= wEndAge) {
+        const combinedFromAge = Math.max(wData.actualStartAge, pensionStart);
+        // NISA取り崩し月額：年金開始時点の残高ベースで算出
+        let nisaMonthlyAtCombined;
+        if (pensionStart <= wData.actualStartAge) {
+          // 年金が先に始まる → NISA開始時の月額
+          nisaMonthlyAtCombined = wData.milestones[0]?.monthly ?? 0;
+        } else {
+          // NISAが先に始まる → 年金開始時点の残高から月額を逆算
+          const yearsElapsed = pensionStart - wData.actualStartAge;
+          const idx = Math.min(yearsElapsed - 1, wData.wNet.length - 1);
+          const balAtPension = wData.wNet[Math.max(0, idx)] ?? 0;
+          nisaMonthlyAtCombined = balAtPension * (wRate / 100) / 12;
+        }
+        const combined = nisaMonthlyAtCombined + actualPensionMonthly;
+        pensionCombinedEl.textContent  = fmt(combined) + '/月';
+        pensionCombinedNote.textContent = combinedFromAge + '歳から両方受取';
+        pensionCombinedRow.style.display = '';
+
+        // Breakdown にも反映
+        bdPensionSection.style.display = '';
+        set('bd-pension-monthly',  fmt(actualPensionMonthly) + '/月');
+        set('bd-pension-combined', fmt(combined) + '/月');
+      } else {
+        pensionCombinedRow.style.display  = 'none';
+        bdPensionSection.style.display    = 'none';
+      }
+    } else {
+      pensionCombinedRow.style.display = 'none';
+      bdPensionSection.style.display   = 'none';
+    }
+  } else {
+    // 積立タブではBreakdownの年金セクションを非表示
+    bdPensionSection.style.display = 'none';
+  }
 }
 
 function set(id, val) { document.getElementById(id).textContent = val; }
@@ -1599,7 +1731,8 @@ updateRateMax();
   // モバイル（タッチデバイス）のみ適用
   if (isTouch) {
     ['sl-age', 'sl-principal', 'sl-monthly', 'sl-rate', 'sl-fee', 'sl-years',
-     'sl-w-start', 'sl-w-return', 'sl-w-fee', 'sl-w-rate', 'sl-w-years']
+     'sl-w-start', 'sl-w-return', 'sl-w-fee', 'sl-w-rate', 'sl-w-years',
+     'sl-pension-monthly', 'sl-pension-start']
       .forEach(function (id) {
         var el = document.getElementById(id);
         if (el) smartSlider(el);
