@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>NISA Compound Growth Simulator</title>
+<title>Lampra Simulator</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@300;400;500;700&family=Pacifico&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -18,11 +18,11 @@
   --text:     #e6edf3;
   --sub:      #8b949e;
   --charcoal: #a89d95;
-  --green:    #3fb950;
-  --blue:     #58a6ff;
-  --yellow:   #e3b341;
-  --red:      #f85149;
-  --orange:   #fb8f44;
+  --green:    #34a044;
+  --blue:     #4a90d9;
+  --yellow:   #c99a2e;
+  --red:      #d94f47;
+  --orange:   #d97a38;
   --gblue:    #4285f4;
   --gteal:    #1aa260;
 }
@@ -73,11 +73,12 @@ html, body {
   width: 100%;
 }
 .page-header h1 {
-  font-family: 'Google Sans', sans-serif;
+  font-family: 'Pacifico', cursive;
   font-size: 2.2rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  line-height: 1.1;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  line-height: 1.5;
+  padding-bottom: 0.2em;
   text-align: center;
   background: linear-gradient(135deg, #e6edf3 0%, #58a6ff 55%, #3fb950 100%);
   -webkit-background-clip: text;
@@ -141,13 +142,13 @@ html, body {
   position: relative;
   z-index: 1;
   flex: 1;
-  min-width: 110px;
-  padding: 11px 22px;
+  min-width: 83px;
+  padding: 8px 17px;
   border: none;
   border-radius: 100px;
   background: transparent;
   color: rgba(139, 148, 158, 0.38);
-  font-size: 1.0rem;
+  font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;
   transition: color 0.2s;
@@ -237,7 +238,7 @@ input[type=range] {
 }
 input[type=range]::-webkit-slider-thumb {
   -webkit-appearance: none;
-  width: 26px; height: 26px;
+  width: 21px; height: 21px;
   border-radius: 50%;
   background: #fff;
   border: 3px solid var(--gblue);
@@ -245,8 +246,8 @@ input[type=range]::-webkit-slider-thumb {
   box-shadow: 0 2px 8px rgba(0,0,0,.4);
 }
 input[type=range]:active::-webkit-slider-thumb {
-  box-shadow: 0 0 0 8px rgba(66,133,244,.2);
-  background: #e8f0fe;
+  box-shadow: 0 0 0 8px rgba(255,184,32,.3);
+  background: #fffbf0;
 }
 .nisa-bar-wrap { margin-top: 6px; }
 .nisa-bar-top {
@@ -402,16 +403,16 @@ input[type=range]:active::-webkit-slider-thumb {
   .page-header { gap: 0; }
   .header-text { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; width: auto; }
   .eyebrow { text-align: left; }
-  .page-header h1 { font-size: 1.7rem; text-align: left; }
-  .page-header .sub { font-size: 0.8rem; opacity: 1; }
+  .page-header h1 { font-size: 2.04rem; text-align: left; }
+  .page-header .sub { font-size: 0.85rem; opacity: 1; }
 
   .mode-btn { padding: 9px 20px; font-size: 0.88rem; min-width: 96px; }
 
   .vals-grid-wrap { display: block; }
 
   input[type=range] { height: 4px; }
-  input[type=range]::-webkit-slider-thumb { width: 18px; height: 18px; box-shadow: 0 2px 6px rgba(0,0,0,.4); }
-  input[type=range]:active::-webkit-slider-thumb { box-shadow: 0 0 0 6px rgba(66,133,244,.15); background: #e8f0fe; }
+  input[type=range]::-webkit-slider-thumb { width: 14px; height: 14px; box-shadow: 0 2px 6px rgba(0,0,0,.4); }
+  input[type=range]:active::-webkit-slider-thumb { box-shadow: 0 0 0 6px rgba(240,168,48,.2); background: #fff8ec; }
 
   .card { border-width: 1px; border-radius: 16px; padding: 16px; }
   .sl-group { margin-bottom: 14px; }
@@ -419,7 +420,7 @@ input[type=range]:active::-webkit-slider-thumb {
   .sl-name { font-size: 0.85rem; }
   .sl-val { font-size: 0.97rem; }
 
-  .page { gap: 10px; padding: 14px 20px; }
+  .page { gap: 14px; padding: 18px 24px; }
 
   .middle-row {
     display: grid;
@@ -492,7 +493,7 @@ input[type=range]:active::-webkit-slider-thumb {
 ════════════════════════════════════════════ */
 @media (max-width: 390px) {
   .page-header h1 { font-size: 1.75rem; }
-  .mode-btn { font-size: 0.95rem; padding: 12px 8px; }
+  .mode-btn { font-size: 0.72rem; padding: 9px 8px; }
 }
 
 /* ════════════════════════════════════════════
@@ -645,17 +646,50 @@ html.beige .inline-limit { color: #a02020; }
   opacity: 0.55;
 }
 #theme-btn:hover { opacity: 1; }
+
+/* ── Splash ── */
+#splash {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  opacity: 0;
+  pointer-events: none;
+  animation: splashAnim 2.2s ease forwards;
+}
+#splash h2 {
+  font-family: 'Pacifico', cursive;
+  font-size: clamp(2.2rem, 8vw, 4rem);
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  display: inline-block;
+  padding: 0.1em 0.1em 0.45em;
+  background: linear-gradient(135deg, #e6edf3 0%, #58a6ff 55%, #3fb950 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+@keyframes splashAnim {
+  0%   { opacity: 0; }
+  20%  { opacity: 1; }
+  70%  { opacity: 1; }
+  100% { opacity: 0; }
+}
 </style>
 </head>
 <body>
+<div id="splash"><h2>Lighttup Simulator</h2></div>
 
 <div class="page" id="page">
 
   <!-- ── Header ── -->
   <div class="page-header">
     <div class="header-text">
-      <div class="eyebrow">Japan NISA · Tax-Free Investment</div>
-      <h1>Compound Growth Simulator</h1>
+      <h1>Lighttup Simulator</h1>
       <p class="sub">新NISAの非課税枠を活用した長期資産形成シミュレーション</p>
     </div>
     <div class="mode-wrap">
@@ -702,7 +736,7 @@ html.beige .inline-limit { color: #a02020; }
               <span class="sl-name">現在の年齢</span>
               <span class="sl-val c-text" id="lbl-age">30歳</span>
             </div>
-            <input type="range" id="sl-age" min="10" max="90" step="1" value="30" oninput="onSlider(true)">
+            <input type="range" id="sl-age" min="18" max="80" step="1" value="30" oninput="onSlider(true)">
           </div>
 
           <div class="sl-group">
@@ -760,7 +794,7 @@ html.beige .inline-limit { color: #a02020; }
               <span class="sl-name">取り崩し開始</span>
               <span class="sl-val c-orange" id="lbl-w-start">65歳</span>
             </div>
-            <input type="range" id="sl-w-start" min="10" max="120" step="1" value="65" oninput="onSlider(true)">
+            <input type="range" id="sl-w-start" min="18" max="120" step="1" value="18" oninput="onSlider(true)">
           </div>
 
           <div class="sl-group">
@@ -897,6 +931,12 @@ html.beige .inline-limit { color: #a02020; }
 </button>
 
 <script>
+// ── Splash ──
+(function() {
+  const splash = document.getElementById('splash');
+  splash.addEventListener('animationend', () => splash.remove());
+})();
+
 // ── Haptic ──
 let _lastHaptic = 0;
 function haptic() {
@@ -1013,7 +1053,13 @@ function onSlider(triggerHaptic = false) {
   set('nisa-pct', pct.toFixed(0) + '%');
 
   // 取り崩しパラメータ
-  const wStartAge   = +document.getElementById('sl-w-start').value;
+  // 取り崩し開始スライダー: min = 積立終了年齢（age+years）に連動
+  // ユーザーが手動で積立終了年齢より大きく設定している場合はそのまま尊重
+  const accumEndAge = age + years;
+  const slWStart    = document.getElementById('sl-w-start');
+  slWStart.min = accumEndAge;
+  if (+slWStart.value < accumEndAge) slWStart.value = accumEndAge;
+  const wStartAge   = +slWStart.value;
   const wReturnRate = +document.getElementById('sl-w-return').value;
   const wFee        = +document.getElementById('sl-w-fee').value;
   const wRate       = +document.getElementById('sl-w-rate').value;
@@ -1392,9 +1438,13 @@ function renderMetrics(data, principal, nisaCap, wData) {
   const fGross = gross[gross.length - 1];
   const fIn    = invested[invested.length - 1];
 
-  // 取り崩しモード時は取り崩し運用終了時点の残高を最終残高として表示
+  // 積立モード: 積立運用終了時残高、取り崩しモード: 取り崩し運用終了時残高
   const wFinalBal = wData?.wNet?.[wData.wNet.length - 1] ?? null;
-  set('m-final',          fmt(wFinalBal !== null ? wFinalBal : fNet));
+  const isWithd = wFinalBal !== null;
+  set('m-final', fmt(isWithd ? wFinalBal : fNet));
+  document.getElementById('m-final').className = 'm-value ' + (isWithd ? 'c-orange' : 'c-green');
+  const primaryCard = document.querySelector('.metric-card--primary');
+  primaryCard.style.borderColor = isWithd ? 'var(--orange)' : 'var(--green)';
   set('m-nofee',          fmt(fGross));
   set('m-total-invested', fmt(fIn));
   set('m-fee-loss',       fmt(fGross - fNet));
