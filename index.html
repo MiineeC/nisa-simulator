@@ -1460,9 +1460,7 @@ updateRateMax();
 //   - setPointerCapture 不使用 → グローバルスクロールロックが発生しない
 //   - contextmenu でも必ず cleanup → 長押しポップアップ後でもスクロール継続
 (function () {
-  const THUMB_HIT  = 32;   // つまみ中心から何px以内をタップと認識するか
-  const SLOW_SPEED = 0.8;  // px/ms：これより遅い動作 = スローモード
-  const SLOW_RATIO = 0.18; // スローモード時の感度（通常の約1/5）
+  const THUMB_HIT = 38; // つまみ中心から何px以内をタップと認識するか（広めに設定）
 
   // つまみの中心X座標を推定
   function thumbCenterX(el) {
@@ -1473,7 +1471,7 @@ updateRateMax();
 
   function smartSlider(el) {
     let active    = false;
-    let prevX     = 0, prevT = 0, frac = 0;
+    let prevX     = 0, frac = 0;
     let lastValid = +el.value;
 
     // ─── onMove / cleanup を一度だけ定義（参照が常に同じ） ─────────────
@@ -1482,15 +1480,11 @@ updateRateMax();
       if (!active) return;
       ev.preventDefault(); // ドラッグ中のスクロールを防止
       const touch = ev.touches[0];
-      const now   = Date.now();
-      const dt    = Math.max(now - prevT, 1);
       const dx    = touch.clientX - prevX;
-      const speed = Math.abs(dx) / dt;
-      const ratio = speed < SLOW_SPEED ? SLOW_RATIO : 1;
 
       const r     = el.getBoundingClientRect();
       const range = +el.max - +el.min;
-      frac += (dx / r.width) * range * ratio;
+      frac += (dx / r.width) * range; // 1:1の感度（スローモード廃止）
 
       const step  = +el.step || 1;
       const steps = Math.trunc(frac / step);
@@ -1501,7 +1495,6 @@ updateRateMax();
         el.dispatchEvent(new Event('input', { bubbles: true }));
       }
       prevX = touch.clientX;
-      prevT = now;
     }
 
     // touchend / touchcancel: ドラッグ終了・クリーンアップ
@@ -1537,7 +1530,6 @@ updateRateMax();
       e.preventDefault(); // 長押しメニュー・コールアウトを完全ブロック
       active    = true;
       prevX     = touch.clientX;
-      prevT     = Date.now();
       frac      = 0;
       lastValid = +el.value;
       haptic();
