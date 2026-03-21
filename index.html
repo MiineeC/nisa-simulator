@@ -230,8 +230,8 @@ input[type=range] {
   outline: none;
   cursor: pointer;
   display: block;
-  touch-action: pan-y;
-  -webkit-touch-callout: none; /* iOS長押しコールアウト無効 */
+  touch-action: none;          /* JSがタッチを完全制御 → 長押しメニューを防止 */
+  -webkit-touch-callout: none;
   user-select: none;
   -webkit-user-select: none;
 }
@@ -1144,9 +1144,9 @@ function simulateWithdrawal(accumData, currentAge, accumYears, wStartAge, wRetur
     }
     if (m % 12 === 0) {
       wNet.push(bal);
-      // 5年ごと（取り崩し開始時 m=0 も含む）
+      // 10年ごと
       const yr = m / 12;
-      if (yr % 5 === 0 || yr === 1) {
+      if (yr % 10 === 0) {
         milestones.push({
           yr,
           age:     actualStartAge + yr,
@@ -1392,7 +1392,9 @@ function renderMetrics(data, principal, nisaCap, wData) {
   const fGross = gross[gross.length - 1];
   const fIn    = invested[invested.length - 1];
 
-  set('m-final',          fmt(fNet));
+  // 取り崩しモード時は取り崩し運用終了時点の残高を最終残高として表示
+  const wFinalBal = wData?.wNet?.[wData.wNet.length - 1] ?? null;
+  set('m-final',          fmt(wFinalBal !== null ? wFinalBal : fNet));
   set('m-nofee',          fmt(fGross));
   set('m-total-invested', fmt(fIn));
   set('m-fee-loss',       fmt(fGross - fNet));
@@ -1474,12 +1476,15 @@ updateRateMax();
     let prevX     = 0, prevT = 0, frac = 0;
     let lastValid = +el.value;
 
-    // ─── onMove / cleanup を一度だけ定義（参照が常に同じ） ───────────────
+    // ─── onMove / cleanup を一度だけ定義（参照が常に同じ） ─────────────
+    // touchmove: ドラッグ中の値更新
     function onMove(ev) {
       if (!active) return;
+      ev.preventDefault(); // ドラッグ中のスクロールを防止
+      const touch = ev.touches[0];
       const now   = Date.now();
       const dt    = Math.max(now - prevT, 1);
-      const dx    = ev.clientX - prevX;
+      const dx    = touch.clientX - prevX;
       const speed = Math.abs(dx) / dt;
       const ratio = speed < SLOW_SPEED ? SLOW_RATIO : 1;
 
@@ -1495,27 +1500,26 @@ updateRateMax();
         frac     -= steps * step;
         el.dispatchEvent(new Event('input', { bubbles: true }));
       }
-      prevX = ev.clientX;
+      prevX = touch.clientX;
       prevT = now;
     }
 
+    // touchend / touchcancel: ドラッグ終了・クリーンアップ
     function cleanup() {
       if (!active) return; // 二重クリーンアップを防止
       active    = false;
       frac      = 0;
       lastValid = +el.value;
-      // 同一関数参照なので確実に解除できる
-      document.removeEventListener('pointermove',   onMove);
-      document.removeEventListener('pointerup',     cleanup);
-      document.removeEventListener('pointercancel', cleanup);
-      document.removeEventListener('contextmenu',   cleanup);
+      document.removeEventListener('touchmove',   onMove);
+      document.removeEventListener('touchend',    cleanup);
+      document.removeEventListener('touchcancel', cleanup);
     }
-    // ──────────────────────────────────────────────────────────────────────
+    // ────────────────────────────────────────────────────────────────────
 
-    // 長押しコンテキストメニューを抑止
+    // コンテキストメニューを完全抑止
     el.addEventListener('contextmenu', function (e) { e.preventDefault(); });
 
-    // inputキャプチャ：ドラッグ外（トラックタップ等）の値変化を差し戻す
+    // inputキャプチャ：トラックタップ等による不正な値変化を差し戻す
     el.addEventListener('input', function (e) {
       if (!active) {
         el.value = lastValid;
@@ -1523,24 +1527,26 @@ updateRateMax();
       }
     }, true);
 
-    // pointerdown：毎回まず cleanup → つまみ判定 → ドラッグ開始
-    el.addEventListener('pointerdown', function (e) {
-      cleanup(); // 前回の残留リスナーを必ず撤去してから開始
-      if (Math.abs(e.clientX - thumbCenterX(el)) > THUMB_HIT) return;
+    // touchstart（passive:false）: つまみ上のみドラッグ開始
+    // ★ preventDefault() でブラウザの長押し処理を根本から封じる
+    el.addEventListener('touchstart', function (e) {
+      cleanup(); // 残留リスナーを必ず撤去
+      const touch = e.touches[0];
+      if (Math.abs(touch.clientX - thumbCenterX(el)) > THUMB_HIT) return;
 
+      e.preventDefault(); // 長押しメニュー・コールアウトを完全ブロック
       active    = true;
-      prevX     = e.clientX;
+      prevX     = touch.clientX;
       prevT     = Date.now();
       frac      = 0;
       lastValid = +el.value;
       haptic();
 
-      // 同一関数参照を登録（重複登録はブラウザが自動で無視する）
-      document.addEventListener('pointermove',   onMove);
-      document.addEventListener('pointerup',     cleanup);
-      document.addEventListener('pointercancel', cleanup);
-      document.addEventListener('contextmenu',   cleanup); // 長押し時の保険
-    }, { passive: true });
+      // 同一参照を登録（重複登録はブラウザが自動で無視する）
+      document.addEventListener('touchmove',   onMove,   { passive: false });
+      document.addEventListener('touchend',    cleanup);
+      document.addEventListener('touchcancel', cleanup);
+    }, { passive: false });
   }
 
   // モバイル（タッチデバイス）のみ適用
