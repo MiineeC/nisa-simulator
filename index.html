@@ -94,21 +94,6 @@ html, body {
   opacity: 0.85;
 }
 
-/* ── Inline limit note (desktop only) ── */
-.inline-limit {
-  display: none;
-  font-size: 0.75rem;
-  color: #ffa198;
-  line-height: 1.45;
-  max-width: 200px;
-  text-align: right;
-}
-.inline-limit .il-year {
-  font-size: 1.0rem;
-  font-weight: 700;
-  display: block;
-  margin-bottom: 1px;
-}
 
 /* ── Mode toggle — pill shape, sliding thumb ── */
 .mode-wrap {
@@ -370,6 +355,10 @@ input[type=range]:active::-webkit-slider-thumb {
   line-height: 1.5;
   display: none;
 }
+/* トグル横 limit-note：モバイルでは非表示 */
+@media (max-width: 1023px) {
+  .mode-wrap .limit-note { display: none !important; }
+}
 
 /* ── Results side panel ── */
 .results-side {
@@ -443,6 +432,18 @@ input[type=range]:active::-webkit-slider-thumb {
 
   .mode-btn { padding: 9px 20px; font-size: 0.88rem; min-width: 96px; }
 
+  /* NISA上限到達ノート：トグル横にコンパクト表示 */
+  .mode-wrap { align-items: center; gap: 10px; }
+  .mode-wrap .limit-note {
+    font-size: 0.68rem;
+    line-height: 1.4;
+    max-width: 160px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    margin: 0;
+    white-space: normal;
+  }
+
   .vals-grid-wrap { display: block; }
 
   input[type=range] { height: 4px; }
@@ -478,6 +479,7 @@ input[type=range]:active::-webkit-slider-thumb {
   .chart-card {
     height: 100%;
     overflow: hidden;
+    padding-bottom: 28px; /* チャートを約5%短縮し下部スペースを確保 */
   }
   .chart-wrap {
     flex: 1;
@@ -586,7 +588,7 @@ html.beige .limit-note {
   border-color: rgba(180, 50, 40, .35);
   color: #a02020;
 }
-html.beige .inline-limit { color: #a02020; }
+
 
 /* ── Parameter tab toggle ── */
 .card-title-row {
@@ -903,12 +905,12 @@ html.beige .inline-limit { color: #a02020; }
       <p class="sub">新NISAの非課税枠を活用した長期資産形成シミュレーション</p>
     </div>
     <div class="mode-wrap">
-      <div class="inline-limit" id="inline-limit"></div>
       <div class="mode-toggle">
         <div class="mode-slider" id="mode-slider"></div>
         <button class="mode-btn active" id="btn-solo" ontouchstart="haptic()" onclick="setMode('solo')">Solo</button>
         <button class="mode-btn" id="btn-partner" ontouchstart="haptic()" onclick="setMode('partner')">w/ Partner</button>
       </div>
+      <div class="limit-note" id="limit-note"></div>
     </div>
   </div>
 
@@ -1155,20 +1157,6 @@ html.beige .inline-limit { color: #a02020; }
         </div>
       </div>
 
-      <!-- 年金詳細（年金設定時のみ表示） -->
-      <div class="results-detail" id="results-detail-pension" style="display:none">
-        <div class="rd-section-title" style="color:var(--pension)">年金</div>
-        <div class="rd-item">
-          <span class="rd-lbl">実受給月額（補正後）</span>
-          <strong class="rd-val c-pension" id="rd-pension-monthly">—</strong>
-        </div>
-        <div class="rd-item" style="border-bottom:none">
-          <span class="rd-lbl">NISA＋年金合計</span>
-          <strong class="rd-val c-pension" id="rd-pension-combined">—</strong>
-        </div>
-      </div>
-
-      <div class="limit-note" id="limit-note"></div>
 
     </div><!-- /results-side -->
 
@@ -1398,10 +1386,10 @@ function setMode(m) {
 
 // ── Ordinal suffix (1st. / 2nd. / 3rd. / 4th. ...) ──
 function ordinal(n) {
-  if (n === 1) return '1st. フェーズ';
-  if (n === 2) return '2nd. フェーズ';
-  if (n === 3) return '3rd. フェーズ';
-  return n + 'th. フェーズ';
+  if (n === 1) return '1st.';
+  if (n === 2) return '2nd.';
+  if (n === 3) return '3rd.';
+  return n + 'th.';
 }
 
 // ── Format ──
@@ -2109,19 +2097,15 @@ function renderMetrics(data, principal, nisaCap, wData) {
   }
 
   const note = document.getElementById('limit-note');
-  const il   = document.getElementById('inline-limit');
   if (limitYear) {
     const lbl      = mode === 'solo' ? '新NISA投資上限枠 ¥1,800万' : '新NISA投資上限枠(2人合計) ¥3,600万';
     const limitAge = _chartStartAge  + limitYear;
     const limitYr  = _chartStartYear + limitYear;
-    const msg = `${limitAge}歳（${limitYr}年）にNISA生涯上限（${lbl} ${fmt(nisaCap)}）に到達。以降は積立停止・複利のみ継続。`;
+    const msg = `${limitAge}歳（${limitYr}年）で上限到達。以降は複利のみ継続。`;
     note.textContent = msg;
     note.style.display = 'block';
-    il.innerHTML = `<span class="il-year">${limitAge}歳で上限到達</span>${limitYr}年以降・複利のみ`;
-    il.style.display = (!isTouch && window.innerWidth >= 1024) ? 'block' : 'none';
   } else {
     note.style.display = 'none';
-    il.style.display = 'none';
   }
 
   // results-side の空状態を更新（デスクトップでスペース無駄遣い防止）
